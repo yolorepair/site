@@ -1,0 +1,5 @@
+# The image only needs site/ and nginx/.
+*
+!site/
+!nginx/
+**/.DS_Store
