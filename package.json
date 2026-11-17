@@ -1,0 +1,16 @@
+{
+  "name": "yolorepair-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^7.4.12"
+  },
+  "engines": {
+    "node": ">=22.23.4"
+  }
+}

@@ -16,3 +16,8 @@
 *.swo
 *~
 # claude-project-kit — managed block END
+
+# Node / Astro
+node_modules/
+dist/
+.astro/
