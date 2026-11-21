@@ -5,19 +5,30 @@ name: image
 # without pushing.
 #
 # :latest is the tag Flux tracks in cluster-management (digest reflection on a
-# mutable tag). :<sha> is there for rollbacks and for pinning by hand.
+# mutable tag). :<sha> is there for rollbacks and for pinning by hand. A
+# release adds :X.Y.Z and :X.Y, so a deploy can pin to a version.
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  # release-please calls this with the new version after a release. A tag it
+  # pushes with the Actions token can't trigger a workflow on its own.
+  workflow_call:
+    inputs:
+      version:
+        description: "Release tag, e.g. v0.3.0"
+        type: string
+        required: true
 
 permissions:
   contents: read
   packages: write
 
 concurrency:
-  group: image-${{ github.ref }}
+  # The version keeps a release build from cancelling the latest build that the
+  # same push to main starts.
+  group: image-${{ github.ref }}-${{ inputs.version }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -56,6 +67,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # :<sha> and :latest from main; :X.Y.Z and :X.Y for a release.
+      - name: Tags
+        id: tags
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          if [ -n "$VERSION" ]; then
+            v="${VERSION#v}"
+            echo "tags=$IMAGE:$v,$IMAGE:${v%.*}" >> "$GITHUB_OUTPUT"
+            echo "first=$IMAGE:$v" >> "$GITHUB_OUTPUT"
+          else
+            echo "tags=$IMAGE:$GITHUB_SHA,$IMAGE:latest" >> "$GITHUB_OUTPUT"
+            echo "first=$IMAGE:$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build multi-arch (push on main only)
         uses: docker/build-push-action@v7
         with:
@@ -63,6 +89,21 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           cache-from: type=gha
-          tags: |
-            ${{ env.IMAGE }}:${{ github.sha }}
-            ${{ env.IMAGE }}:latest
+          tags: ${{ steps.tags.outputs.tags }}
+
+      # The deploy target is a Raspberry Pi cluster. If linux/arm64 ever falls
+      # out of the platforms list above, this fails the build here rather than
+      # letting a pod fail to schedule on the cluster days later.
+      - name: Assert published manifest includes linux/arm64
+        if: github.event_name != 'pull_request'
+        env:
+          FIRST: ${{ steps.tags.outputs.first }}
+        run: |
+          set -euo pipefail
+          manifest=$(docker buildx imagetools inspect "$FIRST")
+          echo "$manifest"
+          if ! grep -q 'linux/arm64' <<<"$manifest"; then
+            echo "::error::published manifest does not advertise linux/arm64"
+            exit 1
+          fi
+          echo "✓ linux/arm64 present in published manifest"
