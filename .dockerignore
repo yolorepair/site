@@ -1,5 +1,9 @@
-# The image only needs site/ and nginx/.
+# Allowlist: only what the build stage and nginx need.
 *
-!site/
+!src/
+!public/
 !nginx/
+!astro.config.mjs
+!package.json
+!package-lock.json
 **/.DS_Store
