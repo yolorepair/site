@@ -6,7 +6,7 @@
 // flag when the page has real content.
 export const pages = [
   { path: '/', label: 'Home' },
-  { path: '/repairs/', label: 'Repairs', draft: true },
+  { path: '/repairs/', label: 'Repairs' },
   { path: '/how-it-works/', label: 'How it works', draft: true },
   { path: '/contact/', label: 'Contact', draft: true },
 ];

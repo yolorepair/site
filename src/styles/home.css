@@ -1,5 +1,4 @@
 main > .mark{width:96px;height:96px}
-.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px}
-.chips li{border:2px solid var(--copper);padding:6px 12px;font-size:14px;font-weight:600}
+.ways{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px 28px}
 .contact{display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-size:15px;color:var(--soft)}
 .contact b{color:var(--copper)}
