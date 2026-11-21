@@ -1,27 +1,12 @@
 ---
-import '../styles/global.css';
+import Base from '../layouts/Base.astro';
 import '../styles/not-found.css';
 ---
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>404 · YOLO Electronics Repair</title>
-<meta name="robots" content="noindex">
-<meta name="theme-color" content="#1E4D9B">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-</head>
-<body>
-<main>
+<Base title="404 · YOLO Electronics Repair" notFound>
   <div>
     <h1>404</h1>
     <p class="sub">OPEN CIRCUIT · NO CONTINUITY</p>
   </div>
   <p class="tag">That trace doesn't go anywhere.</p>
-  <p><a href="/">Back to the bench</a> · <a href="mailto:hello@yolorepair.com">hello@yolorepair.com</a></p>
-</main>
-</body>
-</html>
+  <p class="note"><a href="/">Back to the bench</a> · <a href="mailto:hello@yolorepair.com">hello@yolorepair.com</a></p>
+</Base>

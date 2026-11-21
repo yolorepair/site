@@ -49,6 +49,34 @@ done
 check "favicon.svg is image/svg+xml" "image/svg+xml" "$(header content-type "$BASE/favicon.svg")"
 check "og-image.png is image/png" "image/png" "$(header content-type "$BASE/og-image.png")"
 
+# Every page: 200 at the slash form, its own canonical, and a relative 301
+# from the slashless form (never an absolute one, which would leak :8080).
+for page in repairs how-it-works contact; do
+  check "GET /$page/ is 200" "200" "$(status "$BASE/$page/")"
+  body="$(curl -s "$BASE/$page/")"
+  has "/$page/ canonical" "<link rel=\"canonical\" href=\"https://yolorepair.com/$page/\">" "$body"
+  has "/$page/ og:url" "<meta property=\"og:url\" content=\"https://yolorepair.com/$page/\">" "$body"
+  has "/$page/ has a description" '<meta name="description"' "$body"
+  has "/$page/ has the nav" '<nav aria-label="Site">' "$body"
+  has "/$page/ marks itself current" "<a href=\"/$page/\" aria-current=\"page\">" "$body"
+  check "GET /$page is 301" "301" "$(status "$BASE/$page")"
+  check "/$page redirects relatively" "/$page/" "$(header location "$BASE/$page")"
+  # Drafts: served, but not for search engines. Drop these two lines for a
+  # page when its copy lands.
+  has "/$page/ is noindex while a draft" '<meta name="robots" content="noindex">' "$body"
+  lacks "/$page/ is not in the sitemap" "yolorepair.com/$page/" "$(curl -s "$BASE/sitemap-0.xml")"
+done
+
+# Sitemap and robots.txt
+check "GET /robots.txt is 200" "200" "$(status "$BASE/robots.txt")"
+has "robots.txt points at the sitemap" "Sitemap: https://yolorepair.com/sitemap-index.xml" "$(curl -s "$BASE/robots.txt")"
+check "GET /sitemap-index.xml is 200" "200" "$(status "$BASE/sitemap-index.xml")"
+has "sitemap index lists the sitemap" "<loc>https://yolorepair.com/sitemap-0.xml</loc>" "$(curl -s "$BASE/sitemap-index.xml")"
+has "sitemap lists the home page" "<loc>https://yolorepair.com/</loc>" "$(curl -s "$BASE/sitemap-0.xml")"
+lacks "home page is indexable" 'content="noindex"' "$(curl -s "$BASE/")"
+has "404 is noindex" '<meta name="robots" content="noindex">' "$(curl -s "$BASE/nope")"
+lacks "404 has no canonical" 'rel="canonical"' "$(curl -s "$BASE/nope")"
+
 # 404s are real 404s with the branded page, for pages and for assets.
 check "GET /nope is 404" "404" "$(status "$BASE/nope")"
 check "GET /nope.png is 404" "404" "$(status "$BASE/nope.png")"
@@ -101,7 +129,7 @@ has "CSP font-src is self only" "font-src 'self';" "$csp"
 lacks "CSP has no unsafe-inline" "unsafe-inline" "$csp"
 lacks "CSP has no Google hosts" "google" "$csp"
 lacks "CSP has no gstatic" "gstatic" "$csp"
-for path in / /nope; do
+for path in / /repairs/ /how-it-works/ /contact/ /nope; do
   page="$(curl -s "$BASE$path")"
   lacks "no Google Fonts in $path" "fonts.googleapis.com" "$page"
   lacks "no gstatic in $path" "fonts.gstatic.com" "$page"
