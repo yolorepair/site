@@ -28,6 +28,7 @@ header() {
     awk -v n="$name" -F': ' 'tolower($1) == tolower(n) { sub(/^[^:]*: /, ""); print; exit }'
 }
 has() { if grep -qF -- "$2" <<<"$3"; then pass "$1"; else fail "$1 (missing: $2)"; fi; }
+lacks() { if grep -qF -- "$2" <<<"$3"; then fail "$1 (found: $2)"; else pass "$1"; fi; }
 
 # Same constraints the cluster applies: non-root, no extra capabilities.
 docker run -d --name "$NAME" -p "127.0.0.1:${PORT}:8080" \
@@ -59,6 +60,28 @@ check "HTML is no-cache" "no-cache" "$(header cache-control "$BASE/")"
 check "assets cache for a day" "public, max-age=86400" "$(header cache-control "$BASE/og-image.png")"
 check "404 is not cached" "no-cache" "$(header cache-control "$BASE/nope.png")"
 
+# Built assets: the stylesheets the page links and the fonts those load, all
+# under /_astro/ with hashed names.
+html="$(curl -s "$BASE/")"
+css_paths="$(grep -oE '/_astro/[^"]+\.css' <<<"$html" | sort -u)"
+has "page links a built stylesheet" "/_astro/" "$css_paths"
+css=""
+for p in $css_paths; do
+  check "GET $p is 200" "200" "$(status "$BASE$p")"
+  check "$p is text/css" "text/css" "$(header content-type "$BASE$p")"
+  check "$p is immutable" "public, max-age=31536000, immutable" "$(header cache-control "$BASE$p")"
+  css+="$(curl -s "$BASE$p")"
+done
+font_paths="$(grep -oE '/_astro/[^)"]+\.woff2' <<<"$css" | sort -u)"
+check "stylesheets load four font files" "4" "$(grep -c . <<<"$font_paths")"
+for p in $font_paths; do
+  check "GET $p is 200" "200" "$(status "$BASE$p")"
+  check "$p is font/woff2" "font/woff2" "$(header content-type "$BASE$p")"
+  check "$p is immutable" "public, max-age=31536000, immutable" "$(header cache-control "$BASE$p")"
+done
+check "missing /_astro/ file is 404" "404" "$(status "$BASE/_astro/nope.css")"
+check "missing /_astro/ file is not cached" "no-cache" "$(header cache-control "$BASE/_astro/nope.css")"
+
 # Compression
 check "HTML is gzipped" "gzip" "$(header content-encoding -H 'Accept-Encoding: gzip' "$BASE/")"
 check "SVG is gzipped" "gzip" "$(header content-encoding -H 'Accept-Encoding: gzip' "$BASE/favicon.svg")"
@@ -70,11 +93,26 @@ for path in / /og-image.png /nope; do
   check "Referrer-Policy on $path" "strict-origin-when-cross-origin" "$(header referrer-policy "$BASE$path")"
   has "CSP on $path" "default-src 'self'" "$(header content-security-policy "$BASE$path")"
 done
+
+# Nothing loads from a third party, and no inline styles.
+csp="$(header content-security-policy "$BASE/")"
+has "CSP style-src is self only" "style-src 'self';" "$csp"
+has "CSP font-src is self only" "font-src 'self';" "$csp"
+lacks "CSP has no unsafe-inline" "unsafe-inline" "$csp"
+lacks "CSP has no Google hosts" "google" "$csp"
+lacks "CSP has no gstatic" "gstatic" "$csp"
+for path in / /nope; do
+  page="$(curl -s "$BASE$path")"
+  lacks "no Google Fonts in $path" "fonts.googleapis.com" "$page"
+  lacks "no gstatic in $path" "fonts.gstatic.com" "$page"
+  lacks "no inline <style> in $path" "<style" "$page"
+  lacks "no style attribute in $path" ' style="' "$page"
+done
+lacks "no third-party URL in the stylesheets" "url(http" "$css"
 check "no nginx version in Server" "nginx" "$(header server "$BASE/")"
 check "no HTTPS redirect from nginx" "200" "$(status -H 'X-Forwarded-Proto: http' "$BASE/")"
 
 # Head tags
-html="$(curl -s "$BASE/")"
 has "canonical link" '<link rel="canonical" href="https://yolorepair.com/">' "$html"
 has "theme-color" '<meta name="theme-color" content="#1E4D9B">' "$html"
 has "SVG favicon" '<link rel="icon" href="/favicon.svg" type="image/svg+xml">' "$html"
