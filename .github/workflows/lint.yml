@@ -1,0 +1,61 @@
+name: lint
+
+# Checks that don't need the image: the Dockerfile itself, and the HTML and
+# internal links of the built site. The image workflow covers the rest (build,
+# smoke test, publish).
+#
+# The job names are what branch protection lists as required checks. Renaming
+# one means updating the rule on main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Lint the Dockerfile
+        uses: hadolint/hadolint-action@v3.5.0
+        with:
+          dockerfile: Dockerfile
+
+  html-and-links:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Same Node as the Dockerfile's build stage. Bump them together.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22.23.5
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build the site
+        env:
+          ASTRO_TELEMETRY_DISABLED: 1
+        run: npm run build
+
+      - name: Validate the HTML
+        run: npm run check:html
+
+      # Internal links only, served from dist/ on localhost. Anything https://
+      # is skipped: an outside site being down shouldn't fail a PR.
+      - name: Check internal links
+        run: npm run check:links

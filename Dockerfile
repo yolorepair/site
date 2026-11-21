@@ -6,9 +6,10 @@ FROM --platform=$BUILDPLATFORM node:22.23.5-alpine3.24@sha256:1314fb30ec37592d58
 WORKDIR /src
 ENV ASTRO_TELEMETRY_DISABLED=1
 
-# Dependencies first, so this layer survives content-only changes.
+# Dependencies first, so this layer survives content-only changes. The dev
+# dependencies are the CI validators; the build doesn't need them.
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --omit=dev
 
 COPY astro.config.mjs ./
 COPY public/ public/
