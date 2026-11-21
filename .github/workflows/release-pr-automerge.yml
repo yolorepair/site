@@ -4,8 +4,9 @@ name: release-pr-automerge
 # ships without a manual merge. Only release-please's own branch triggers this;
 # every other PR stays a manual merge.
 #
-# Not GitHub's auto-merge: that needs required checks on main, and main has
-# none yet.
+# GitHub's own auto-merge could do this too, now that main has required checks
+# (build, hadolint, html-and-links). It didn't when this was written. This
+# stays because it waits on every check on the PR, not only the required ones.
 #
 # This wakes when the image workflow finishes on the release PR and merges only
 # when nothing on the PR is still running or failed. workflow_run always runs
