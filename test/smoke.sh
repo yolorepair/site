@@ -89,6 +89,9 @@ has "og:title" '<meta property="og:title"' "$html"
 has "og:description" '<meta property="og:description"' "$html"
 has "twitter:card" '<meta name="twitter:card" content="summary_large_image">' "$html"
 
+# Body
+has "links back to mrcupp.com" '<a href="https://mrcupp.com/">mrcupp.com</a>' "$html"
+
 echo
 if [ "$fails" -gt 0 ]; then
   echo "$fails check(s) failed"
