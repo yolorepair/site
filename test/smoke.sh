@@ -10,6 +10,8 @@ PORT="${PORT:-18080}"
 BASE="http://127.0.0.1:${PORT}"
 NAME="yolorepair-site-smoke-$$"
 fails=0
+# Pages that exist but have no copy yet.
+DRAFTS="how-it-works contact"
 
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
@@ -61,10 +63,30 @@ for page in repairs how-it-works contact; do
   has "/$page/ marks itself current" "<a href=\"/$page/\" aria-current=\"page\">" "$body"
   check "GET /$page is 301" "301" "$(status "$BASE/$page")"
   check "/$page redirects relatively" "/$page/" "$(header location "$BASE/$page")"
-  # Drafts: served, but not for search engines. Drop these two lines for a
-  # page when its copy lands.
-  has "/$page/ is noindex while a draft" '<meta name="robots" content="noindex">' "$body"
-  lacks "/$page/ is not in the sitemap" "yolorepair.com/$page/" "$(curl -s "$BASE/sitemap-0.xml")"
+  # Drafts are served, but not for search engines. Take a page out of DRAFTS
+  # when its copy lands.
+  sitemap="$(curl -s "$BASE/sitemap-0.xml")"
+  case " $DRAFTS " in
+    *" $page "*)
+      has "/$page/ is noindex while a draft" '<meta name="robots" content="noindex">' "$body"
+      lacks "/$page/ is not in the sitemap" "yolorepair.com/$page/" "$sitemap" ;;
+    *)
+      lacks "/$page/ is indexable" 'content="noindex"' "$body"
+      has "/$page/ is in the sitemap" "<loc>https://yolorepair.com/$page/</loc>" "$sitemap" ;;
+  esac
+done
+
+# The facts the copy has to keep straight.
+home="$(curl -s "$BASE/")"
+repairs="$(curl -s "$BASE/repairs/")"
+has "home links to repairs" '<a href="/repairs/">' "$home"
+has "home says quote first" "before any work starts" "$home"
+has "repairs says quote first" "before any work starts" "$repairs"
+has "repairs lists phones as not taken" "PHONES AND TABLETS" "$repairs"
+for page in "$home" "$repairs"; do
+  lacks "no price printed" '$' "$page"
+  lacks "no warranty promised" "arranty" "$page"
+  lacks "no phone number" "tel:" "$page"
 done
 
 # Sitemap and robots.txt

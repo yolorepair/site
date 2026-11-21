@@ -1,10 +1,64 @@
 ---
 import Base from '../layouts/Base.astro';
-import Draft from '../components/Draft.astro';
 ---
 <Base
   title="Repairs · YOLO Electronics Repair"
-  description="What YOLO Electronics Repair fixes: laptops, GPUs, DJ gear and retro hardware."
+  description="What YOLO Electronics Repair fixes: laptops, GPUs, DJ gear and retro hardware, repaired at the board. And what it doesn't take."
 >
-  <Draft heading="Repairs" />
+  <div>
+    <h1>Repairs</h1>
+    <p class="sub">FOUR KINDS OF GEAR · ONE BENCH</p>
+  </div>
+  <p class="tag">We fix the board, not the box it came in.</p>
+
+  <section class="block">
+    <h2>What board-level means</h2>
+    <p class="note">The usual fix for a dead board is a new board. Board-level repair goes one layer down: find the one part that failed (a shorted capacitor, a blown MOSFET, a cracked solder joint) and replace that. The rest of the board was fine, so it stays.</p>
+  </section>
+
+  <section class="block">
+    <h2>Laptops</h2>
+    <p class="note">The ones that quit without a good reason.</p>
+    <ul class="chips">
+      <li>WON'T POWER ON</li><li>WON'T CHARGE</li><li>NO PICTURE</li><li>DEAD PORTS</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>GPUs</h2>
+    <p class="note">Graphics cards that stopped doing the one thing they're for.</p>
+    <ul class="chips">
+      <li>NO DISPLAY</li><li>ARTIFACTS</li><li>NOT DETECTED</li><li>FANS SPIN, NO PICTURE</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>DJ gear</h2>
+    <p class="note">Mixers and controllers. The parts your hands wear out, and the ones behind them.</p>
+    <ul class="chips">
+      <li>WORN FADERS</li><li>SCRATCHY POTS</li><li>CHANNELS CUTTING OUT</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Retro</h2>
+    <p class="note">Old consoles and computers that still deserve to run.</p>
+    <ul class="chips">
+      <li>WON'T BOOT</li><li>NO VIDEO</li><li>TIRED CAPACITORS</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Not our bench</h2>
+    <ul class="chips no">
+      <li>PHONES AND TABLETS</li><li>TVS</li><li>LARGE APPLIANCES</li>
+    </ul>
+    <p class="note">Not sure which side of the line yours is on? Ask. It costs an email.</p>
+  </section>
+
+  <section class="block">
+    <h2>Quote first</h2>
+    <p class="note">You hear the price before any work starts. Nothing gets replaced until you say go.</p>
+    <p class="note">Email <a href="mailto:hello@yolorepair.com">hello@yolorepair.com</a> with what it is and what it's doing.</p>
+  </section>
 </Base>

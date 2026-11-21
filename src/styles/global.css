@@ -11,6 +11,13 @@ h1{margin:0;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight
 .sub{margin:6px 0 0;color:var(--copper);font-weight:600;letter-spacing:.2em;font-size:14px}
 .tag{margin:0;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:600;font-size:28px;line-height:1.15}
 .note{margin:0;font-size:15px;line-height:1.5;color:var(--soft)}
+.block{display:flex;flex-direction:column;gap:12px}
+h2{margin:0;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800;font-size:32px;line-height:1;color:var(--copper)}
+h3{margin:0 0 6px;font-size:14px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
+.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px}
+.chips li{border:2px solid var(--copper);padding:6px 12px;font-size:14px;font-weight:600}
+/* The things the shop doesn't take: same chip, struck through and dimmed. */
+.chips.no li{border-color:var(--soft);color:var(--soft);text-decoration:line-through}
 a{color:var(--ink)}a:hover{color:var(--copper)}
 a:focus-visible{outline:2px solid var(--copper);outline-offset:3px}
 
