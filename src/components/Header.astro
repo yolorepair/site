@@ -1,0 +1,17 @@
+---
+import Mark from './Mark.astro';
+import { pages } from '../site.js';
+
+const here = Astro.url.pathname;
+const links = pages.filter((p) => p.path !== '/');
+---
+<header class="site-header">
+  <a class="brand" href="/" aria-current={here === '/' ? 'page' : undefined}><Mark /><span>YOLO Repair</span></a>
+  <nav aria-label="Site">
+    <ul>
+      {links.map((p) => (
+        <li><a href={p.path} aria-current={here === p.path ? 'page' : undefined}>{p.label}</a></li>
+      ))}
+    </ul>
+  </nav>
+</header>

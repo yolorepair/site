@@ -1,50 +1,19 @@
 ---
-import '../styles/global.css';
+import Base from '../layouts/Base.astro';
+import Mark from '../components/Mark.astro';
 import '../styles/home.css';
 ---
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>YOLO Electronics Repair · West Sacramento</title>
-<meta name="description" content="Board-level electronics repair in West Sacramento. Laptops, GPUs, DJ gear, retro.">
-<link rel="canonical" href="https://yolorepair.com/">
-<meta name="theme-color" content="#1E4D9B">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="YOLO Electronics Repair">
-<meta property="og:title" content="YOLO Electronics Repair · West Sacramento">
-<meta property="og:description" content="Board-level electronics repair in West Sacramento. Laptops, GPUs, DJ gear, retro.">
-<meta property="og:url" content="https://yolorepair.com/">
-<meta property="og:image" content="https://yolorepair.com/og-image.png">
-<meta property="og:image:type" content="image/png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="YOLO Electronics Repair. You let the smoke out. We put it back in.">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="YOLO Electronics Repair · West Sacramento">
-<meta name="twitter:description" content="Board-level electronics repair in West Sacramento. Laptops, GPUs, DJ gear, retro.">
-<meta name="twitter:image" content="https://yolorepair.com/og-image.png">
-<meta name="twitter:image:alt" content="YOLO Electronics Repair. You let the smoke out. We put it back in.">
-</head>
-<body>
-<main>
-  <svg class="mark" viewBox="0 0 560 560" role="img" aria-label="YOLO Y-trace logo">
-    <circle cx="280" cy="280" r="276" fill="#163D7E" stroke="#E0A050" stroke-width="8"/>
-    <path d="M280 440 V300 L160 180 V120 M280 300 L400 180 V120" fill="none" stroke="#E0A050" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="160" cy="110" r="44" fill="#E0A050"/><circle cx="160" cy="110" r="17" fill="#163D7E"/>
-    <circle cx="400" cy="110" r="44" fill="#E0A050"/><circle cx="400" cy="110" r="17" fill="#163D7E"/>
-    <circle cx="280" cy="450" r="44" fill="#E0A050"/><circle cx="280" cy="450" r="17" fill="#163D7E"/>
-  </svg>
+<Base
+  title="YOLO Electronics Repair · West Sacramento"
+  description="Board-level electronics repair in West Sacramento. Laptops, GPUs, DJ gear, retro."
+>
+  <Mark label="YOLO Y-trace logo" />
   <div>
     <h1>YOLO Electronics Repair</h1>
     <p class="sub">BOARD-LEVEL REPAIR · WEST SAC · 916</p>
   </div>
   <p class="tag">You let the smoke out. We put it back in.</p>
-  <ul>
+  <ul class="chips">
     <li>LAPTOPS</li><li>GPUS</li><li>DJ GEAR</li><li>RETRO</li>
   </ul>
   <div class="contact">
@@ -52,7 +21,5 @@ import '../styles/home.css';
     <b>J2</b><span><a href="https://instagram.com/yolo.repair">@yolo.repair</a></span>
     <b>J3</b><span>West Sacramento · mail-in welcome</span>
   </div>
-  <footer>Full site coming soon. The bench and the tools behind it live at <a href="https://mrcupp.com/">mrcupp.com</a>.</footer>
-</main>
-</body>
-</html>
+  <p class="note">Full site coming soon.</p>
+</Base>

@@ -1,0 +1,12 @@
+---
+// The Y-trace mark. Decorative when it sits next to the shop's name; pass a
+// label when it stands alone.
+const { label } = Astro.props;
+---
+<svg class="mark" viewBox="0 0 560 560" role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}>
+  <circle cx="280" cy="280" r="276" fill="#163D7E" stroke="#E0A050" stroke-width="8"/>
+  <path d="M280 440 V300 L160 180 V120 M280 300 L400 180 V120" fill="none" stroke="#E0A050" stroke-width="36" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="160" cy="110" r="44" fill="#E0A050"/><circle cx="160" cy="110" r="17" fill="#163D7E"/>
+  <circle cx="400" cy="110" r="44" fill="#E0A050"/><circle cx="400" cy="110" r="17" fill="#163D7E"/>
+  <circle cx="280" cy="450" r="44" fill="#E0A050"/><circle cx="280" cy="450" r="17" fill="#163D7E"/>
+</svg>
