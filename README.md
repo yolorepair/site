@@ -66,6 +66,28 @@ Then open `http://localhost:8080`.
 | `nginx/` | Server config: headers, caching, the 404. |
 | `test/smoke.sh` | The smoke test. |
 | `Dockerfile` | Two stages: Node builds the site, nginx serves it. |
+| `relay/` | The relay: a small Go service for the repair-request form. Its own image. |
+
+## The relay
+
+`relay/` is a second, separate service. It takes the repair-request form's POST, checks it, forwards it to the bench's intake system with a token that can write a request and read nothing, and answers with a redirect to a thank-you page or a problem page. It keeps nothing: no database, no disk, and nothing a person typed goes in its logs.
+
+It isn't deployed yet, and the site has no form yet. You need Go 1.27 to work on it.
+
+```bash
+cd relay
+go test ./...
+```
+
+The tests run against a fake intake built from `relay/testdata/request-contract.json`. That file is intake's contract, copied from its repo. When intake changes it, copy it again; don't edit it here. A test fails if the relay's rules and the contract disagree.
+
+To build the image:
+
+```bash
+docker build -t yolorepair-site-relay:test relay/
+```
+
+It reads `INTAKE_URL` and `INTAKE_SUBMIT_TOKEN` from the environment and won't start without both. It listens on 8080.
 
 ## Rules the build enforces
 
