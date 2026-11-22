@@ -37,6 +37,14 @@ test/smoke.sh
 
 The smoke test starts the image and checks it from the outside: status codes, security headers, cache headers, compression, redirects, the sitemap, and the facts the copy has to keep straight.
 
+To test a published image instead, pass its name. A registry image is pulled first, so you're never testing a stale local copy:
+
+```bash
+test/smoke.sh ghcr.io/yolorepair/site:latest
+```
+
+The package is private, so that needs a `docker login ghcr.io` first.
+
 To poke at it yourself:
 
 ```bash
