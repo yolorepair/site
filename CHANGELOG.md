@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/yolorepair/site/compare/v0.1.1...v0.2.0) (2026-11-22)
+
+
+### Features
+
+* **relay:** add the relay service for the repair-request form ([#37](https://github.com/yolorepair/site/issues/37)) ([987e7e8](https://github.com/yolorepair/site/commit/987e7e83feae262813c296eb17a355714e4cd717))
+
 ## [0.1.1](https://github.com/yolorepair/site/compare/v0.1.0...v0.1.1) (2026-11-22)
 
 
