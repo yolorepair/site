@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/yolorepair/site/compare/v0.1.0...v0.1.1) (2026-11-22)
+
+
+### Bug Fixes
+
+* **test:** pull registry images before smoke-testing them ([#34](https://github.com/yolorepair/site/issues/34)) ([e72cdbc](https://github.com/yolorepair/site/commit/e72cdbc69f41c95b307a29ed8cab3182b7c1a943))
+
 ## 0.1.0 (2026-11-22)
 
 
