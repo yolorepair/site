@@ -3,6 +3,11 @@
 # compression and the link-preview tags.
 #
 #   test/smoke.sh [image]        # default image: yolorepair-site:test
+#
+# A registry image (anything with a "/" in its name, like
+# ghcr.io/yolorepair/site:latest) is pulled first. Docker would otherwise run
+# whatever copy of that tag it already has, which can be days old. A local tag
+# is run as it is. Set SMOKE_NO_PULL=1 to skip the pull.
 set -euo pipefail
 
 IMAGE="${1:-yolorepair-site:test}"
@@ -31,6 +36,20 @@ header() {
 }
 has() { if grep -qF -- "$2" <<<"$3"; then pass "$1"; else fail "$1 (missing: $2)"; fi; }
 lacks() { if grep -qF -- "$2" <<<"$3"; then fail "$1 (found: $2)"; else pass "$1"; fi; }
+
+case "$IMAGE" in
+  */*)
+    if [ "${SMOKE_NO_PULL:-0}" = "1" ]; then
+      echo "note: SMOKE_NO_PULL=1, testing the local copy of $IMAGE, which may be stale"
+    elif ! docker pull -q "$IMAGE" >/dev/null; then
+      # No fallback to a cached copy: passing or failing against an old image
+      # says nothing about the published one.
+      echo "error: could not pull $IMAGE (not logged in to the registry?)" >&2
+      echo "       log in and retry, or set SMOKE_NO_PULL=1 to test the local copy" >&2
+      exit 2
+    fi ;;
+esac
+echo "image: $IMAGE ($(docker image inspect "$IMAGE" --format '{{.Id}}, created {{.Created}}' 2>/dev/null || echo 'not found locally'))"
 
 # Same constraints the cluster applies: non-root, no extra capabilities.
 docker run -d --name "$NAME" -p "127.0.0.1:${PORT}:8080" \
@@ -122,7 +141,9 @@ check "404 is not cached" "no-cache" "$(header cache-control "$BASE/nope.png")"
 # Built assets: the stylesheets the page links and the fonts those load, all
 # under /_astro/ with hashed names.
 html="$(curl -s "$BASE/")"
-css_paths="$(grep -oE '/_astro/[^"]+\.css' <<<"$html" | sort -u)"
+# "|| true": grep finding nothing is a failed check below, not a reason for the
+# script to stop here without a summary.
+css_paths="$(grep -oE '/_astro/[^"]+\.css' <<<"$html" | sort -u || true)"
 has "page links a built stylesheet" "/_astro/" "$css_paths"
 css=""
 for p in $css_paths; do
@@ -131,7 +152,7 @@ for p in $css_paths; do
   check "$p is immutable" "public, max-age=31536000, immutable" "$(header cache-control "$BASE$p")"
   css+="$(curl -s "$BASE$p")"
 done
-font_paths="$(grep -oE '/_astro/[^)"]+\.woff2' <<<"$css" | sort -u)"
+font_paths="$(grep -oE '/_astro/[^)"]+\.woff2' <<<"$css" | sort -u || true)"
 check "stylesheets load four font files" "4" "$(grep -c . <<<"$font_paths")"
 for p in $font_paths; do
   check "GET $p is 200" "200" "$(status "$BASE$p")"
