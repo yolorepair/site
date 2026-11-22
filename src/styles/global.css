@@ -16,6 +16,12 @@ h2{margin:0;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight
 h3{margin:0 0 6px;font-size:14px;font-weight:600;letter-spacing:.12em;text-transform:uppercase}
 .chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px}
 .chips li{border:2px solid var(--copper);padding:6px 12px;font-size:14px;font-weight:600}
+.steps{margin:0;padding:0;list-style:none;counter-reset:step;display:flex;flex-direction:column;gap:18px}
+/* Fixed first column so the step text lines up whatever the digit's width. */
+.steps li{counter-increment:step;display:grid;grid-template-columns:36px 1fr;column-gap:12px}
+.steps li::before{content:counter(step,decimal-leading-zero);grid-row:span 2;color:var(--copper);font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800;font-size:32px;line-height:1}
+.plain{margin:0;padding-left:20px;font-size:15px;line-height:1.5;color:var(--soft);display:flex;flex-direction:column;gap:4px}
+.plain li::marker{color:var(--copper)}
 /* The things the shop doesn't take: same chip, struck through and dimmed. */
 .chips.no li{border-color:var(--soft);color:var(--soft);text-decoration:line-through}
 a{color:var(--ink)}a:hover{color:var(--copper)}

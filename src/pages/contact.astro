@@ -1,10 +1,40 @@
 ---
 import Base from '../layouts/Base.astro';
-import Draft from '../components/Draft.astro';
+import '../styles/home.css';
 ---
 <Base
   title="Contact · YOLO Electronics Repair"
-  description="How to reach YOLO Electronics Repair in West Sacramento."
+  description="Reach YOLO Electronics Repair in West Sacramento by email or Instagram. Drop-off by appointment, mail-in welcome."
 >
-  <Draft heading="Contact" />
+  <div>
+    <h1>Contact</h1>
+    <p class="sub">EMAIL IS THE FRONT DOOR</p>
+  </div>
+  <p class="tag">Say what it is and what it's doing.</p>
+
+  <section class="block">
+    <h2>Reach the bench</h2>
+    <div class="contact">
+      <b>J1</b><span><a href="mailto:hello@yolorepair.com">hello@yolorepair.com</a></span>
+      <b>J2</b><span><a href="https://instagram.com/yolo.repair">@yolo.repair</a> on Instagram</span>
+    </div>
+    <p class="note">Email is the one that gets a repair started. No phone line.</p>
+  </section>
+
+  <section class="block">
+    <h2>Where</h2>
+    <p class="note">West Sacramento, California. Local drop-off covers West Sac and the rest of the 916, by appointment. Everyone else mails it in.</p>
+    <p class="note">There's no street address here on purpose. You get it by email once there's a repair to bring or ship.</p>
+  </section>
+
+  <section class="block">
+    <h2>What to put in the email</h2>
+    <ul class="plain">
+      <li>What it is. Make and model if you have them.</li>
+      <li>What it's doing, or not doing.</li>
+      <li>What happened right before it quit.</li>
+      <li>Drop-off or mail-in.</li>
+    </ul>
+    <p class="note"><a href="/how-it-works/">How a repair goes from there</a></p>
+  </section>
 </Base>

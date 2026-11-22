@@ -7,8 +7,8 @@
 export const pages = [
   { path: '/', label: 'Home' },
   { path: '/repairs/', label: 'Repairs' },
-  { path: '/how-it-works/', label: 'How it works', draft: true },
-  { path: '/contact/', label: 'Contact', draft: true },
+  { path: '/how-it-works/', label: 'How it works' },
+  { path: '/contact/', label: 'Contact' },
 ];
 
 export const draftPaths = pages.filter((p) => p.draft).map((p) => p.path);

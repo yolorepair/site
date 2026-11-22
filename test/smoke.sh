@@ -11,7 +11,7 @@ BASE="http://127.0.0.1:${PORT}"
 NAME="yolorepair-site-smoke-$$"
 fails=0
 # Pages that exist but have no copy yet.
-DRAFTS="how-it-works contact"
+DRAFTS=""
 
 cleanup() { docker rm -f "$NAME" >/dev/null 2>&1 || true; }
 trap cleanup EXIT
@@ -83,7 +83,14 @@ has "home links to repairs" '<a href="/repairs/">' "$home"
 has "home says quote first" "before any work starts" "$home"
 has "repairs says quote first" "before any work starts" "$repairs"
 has "repairs lists phones as not taken" "PHONES AND TABLETS" "$repairs"
-for page in "$home" "$repairs"; do
+how="$(curl -s "$BASE/how-it-works/")"
+contact="$(curl -s "$BASE/contact/")"
+has "how-it-works says quote first" "before any work starts" "$how"
+has "how-it-works says drop-off is by appointment" "by appointment" "$how"
+has "contact has the email" 'href="mailto:hello@yolorepair.com"' "$contact"
+has "contact has Instagram" 'href="https://instagram.com/yolo.repair"' "$contact"
+has "contact says drop-off is by appointment" "by appointment" "$contact"
+for page in "$home" "$repairs" "$how" "$contact"; do
   lacks "no price printed" '$' "$page"
   lacks "no warranty promised" "arranty" "$page"
   lacks "no phone number" "tel:" "$page"
