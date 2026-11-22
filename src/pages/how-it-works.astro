@@ -1,10 +1,50 @@
 ---
 import Base from '../layouts/Base.astro';
-import Draft from '../components/Draft.astro';
 ---
 <Base
   title="How it works · YOLO Electronics Repair"
-  description="How drop-off and mail-in repairs work at YOLO Electronics Repair in West Sacramento."
+  description="How a repair goes at YOLO Electronics Repair in West Sacramento: email first, quote, bench, return. Drop-off by appointment or mail-in."
 >
-  <Draft heading="How it works" />
+  <div>
+    <h1>How it works</h1>
+    <p class="sub">EMAIL · QUOTE · BENCH · RETURN</p>
+  </div>
+  <p class="tag">Four steps. The first one is an email.</p>
+
+  <section class="block">
+    <h2>The steps</h2>
+    <ol class="steps">
+      <li>
+        <h3>Email first</h3>
+        <p class="note">Write to <a href="mailto:hello@yolorepair.com">hello@yolorepair.com</a>. Say what it is and what it's doing. A model number helps. So does what happened right before it quit.</p>
+      </li>
+      <li>
+        <h3>Get it here</h3>
+        <p class="note">Drop it off or mail it in. Both are below.</p>
+      </li>
+      <li>
+        <h3>Quote, then bench</h3>
+        <p class="note">You hear the price before any work starts. Nothing gets replaced until you say go.</p>
+      </li>
+      <li>
+        <h3>Get it back</h3>
+        <p class="note">Local gear gets picked up. Mail-in gear ships back.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="block">
+    <h2>Drop it off</h2>
+    <p class="note">For West Sac and the rest of the 916. Drop-off is by appointment, so there's no walk-in counter to find. We set a time by email.</p>
+  </section>
+
+  <section class="block">
+    <h2>Mail it in</h2>
+    <p class="note">For everyone else. Once we've agreed on the repair you get the shipping address by email. Pack it like it's going to be dropped, because it will be.</p>
+  </section>
+
+  <section class="block">
+    <h2>Not sure it's worth fixing?</h2>
+    <p class="note">Ask anyway. <a href="/repairs/">What gets fixed, and what doesn't</a> covers the short version.</p>
+  </section>
 </Base>
