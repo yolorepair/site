@@ -90,6 +90,12 @@ Commits follow [Conventional Commits](https://www.conventionalcommits.org). [rel
 
 Every merge still deploys. A release just gives a version something to pin to. No release has been cut yet, so there's no `CHANGELOG.md` to read.
 
+## Dependency updates
+
+Dependabot checks npm, the Docker base images and the GitHub Actions versions every Monday and opens one grouped PR per ecosystem. CI runs on each. Nothing merges them for you.
+
+Two things are held on purpose: Node stays on 22 and nginx stays on its stable 1.30 line. Moving either is a decision, so Dependabot only offers patch-level bumps for nginx and nothing across a Node major.
+
 ## Brand
 
 The logo, palette and font choices come from [`yolorepair/branding`](https://github.com/yolorepair/branding). This repo carries its own copy of the mark for now.
