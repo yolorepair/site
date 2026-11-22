@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Lint the Dockerfile
         uses: hadolint/hadolint-action@v3.5.0
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Same Node as the Dockerfile's build stage, read from its FROM line so a
       # bump there (Dependabot's, usually) can't leave this one behind.
