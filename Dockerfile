@@ -1,6 +1,7 @@
 # Build stage. Runs on the builder's own architecture: the output is plain
 # files, so there's no reason to run npm under emulation for arm64. Pinned by
-# tag and index digest, same as nginx below. Bump both together.
+# tag and index digest, same as nginx below. Bump both together. CI reads its
+# Node version from this line.
 FROM --platform=$BUILDPLATFORM node:22.23.5-alpine3.24@sha256:1314fb30ec37592d5845e5a160d522c0e680972aa534549940b8d73bde88481a AS build
 
 WORKDIR /src

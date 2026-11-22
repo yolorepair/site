@@ -1,0 +1,63 @@
+# Weekly dependency updates, one grouped PR per ecosystem. CI gates each one:
+# the image has to build for both architectures, pass the smoke test, and the
+# site has to validate.
+#
+# These PRs are not merged for you. Read the bump, then merge it.
+version: 2
+
+updates:
+  # Astro, the font packages, the sitemap integration, the CI validators.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Los_Angeles
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      npm:
+        patterns: ["*"]
+
+  # The two base images in the Dockerfile. Dependabot moves the tag and the
+  # digest together, which is how they're pinned.
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Los_Angeles
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      docker:
+        patterns: ["*"]
+    ignore:
+      # Stay on Node 22. A new major is a decision, not a routine bump.
+      - dependency-name: node
+        update-types: ["version-update:semver-major"]
+      # Stay on nginx's stable line. Stable is the even minor (1.30); the next
+      # minor up (1.31) is mainline. Patch releases only.
+      - dependency-name: nginxinc/nginx-unprivileged
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+
+  # The actions the workflows call.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Los_Angeles
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      actions:
+        patterns: ["*"]
