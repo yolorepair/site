@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/yolorepair/site/compare/v0.2.0...v0.3.0) (2026-11-23)
+
+
+### Features
+
+* **relay:** add honeypot, rate limits and a link check ([#42](https://github.com/yolorepair/site/issues/42)) ([f6af05e](https://github.com/yolorepair/site/commit/f6af05e4b6f908003eb12f512643b2a721df1dc1))
+
 ## [0.2.0](https://github.com/yolorepair/site/compare/v0.1.1...v0.2.0) (2026-11-22)
 
 
