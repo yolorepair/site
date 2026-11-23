@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/yolorepair/site/compare/v0.3.0...v0.4.0) (2026-11-23)
+
+
+### Features
+
+* **site:** add the repair-request form and its path to the relay, unlisted ([#45](https://github.com/yolorepair/site/issues/45)) ([1079a0b](https://github.com/yolorepair/site/commit/1079a0b3aab70f158976a2d57bc24a2d80221916))
+
 ## [0.3.0](https://github.com/yolorepair/site/compare/v0.2.0...v0.3.0) (2026-11-23)
 
 
