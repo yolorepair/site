@@ -61,18 +61,42 @@ Then open `http://localhost:8080`.
 | `src/layouts/Base.astro` | The `<head>` for every page. Pages pass a title and a description. |
 | `src/components/` | Header, footer, the logo mark. |
 | `src/styles/` | All the CSS. `global.css` is shared; the rest are per page. |
-| `src/site.js` | The page list. The nav, the sitemap and `noindex` all read it. |
+| `src/site.js` | The page list, and the pages that are served but unlisted. The nav, the sitemap and `noindex` all read it. |
 | `public/` | Files served as-is: favicons, the link-preview image, `robots.txt`. |
-| `nginx/` | Server config: headers, caching, the 404. |
+| `nginx/` | Server config: headers, caching, the 404, and the form's path to the relay. |
 | `test/smoke.sh` | The smoke test. |
 | `Dockerfile` | Two stages: Node builds the site, nginx serves it. |
 | `relay/` | The relay: a small Go service for the repair-request form. Its own image. |
+
+## The request form
+
+`/request/` is a plain HTML form: name, email, what it is, what it's doing, drop-off or mail-in. No JavaScript. It posts to `/request/submit` on the same site, so the CSP's `form-action 'self'` still holds.
+
+**It's built but not open.** The form, `/request/thanks/` and `/request/problem/` are in `unlisted` in `src/site.js`: served, but with no nav link, `noindex`, and out of the sitemap. Nothing on the site links to them yet.
+
+nginx hands `POST /request/submit` to the relay, and that's the only request that leaves the site's container. One setting says where the relay is:
+
+| Setting | What it is |
+|---|---|
+| `RELAY_URL` | The relay's address, like `http://site-relay.shop.svc.cluster.local:8080`. Scheme, host and port, nothing else. Optional. |
+
+The rule is that the form may break and the site may not:
+
+- **`RELAY_URL` unset** — the form lands on the problem page, which says to email. This is how the image runs today.
+- **`RELAY_URL` set to something that isn't a plain address** — same, and the start-up log says so.
+- **Relay down, or its name doesn't resolve** — same, per request. nginx looks the name up when a form arrives, not at start, so a missing relay can't stop the site from starting.
+
+That last one has a price: nginx's resolver doesn't read the search domains in `/etc/resolv.conf`. In Kubernetes, give `RELAY_URL` the full service name ending in `.svc.cluster.local`. A short name never resolves, and every form ends on the problem page.
+
+The location is written at container start by `nginx/40-relay-location.sh` into `/tmp/relay-location.conf`, so `/tmp` has to be writable. It already has to be: nginx keeps its pid file there.
+
+The smoke test covers all of the cases above against a stand-in relay. The real relay behind the real site isn't tested together yet.
 
 ## The relay
 
 `relay/` is a second, separate service. It takes the repair-request form's POST, checks it, forwards it to the bench's intake system with a token that can write a request and read nothing, and answers with a redirect to a thank-you page or a problem page. It keeps nothing: no database, no disk, and nothing a person typed goes in its logs.
 
-It isn't deployed yet, and the site has no form yet. You need Go 1.27 to work on it.
+It isn't deployed yet. You need Go 1.27 to work on it.
 
 ```bash
 cd relay
@@ -126,6 +150,8 @@ The counters live in memory, so they reset on a restart and aren't shared betwee
 1. Create `src/pages/<name>.astro` and wrap the content in `Base`.
 2. Add it to the list in `src/site.js`. That puts it in the nav and the sitemap.
 3. Add `<name>` to the page loop in `test/smoke.sh`.
+
+A page that shouldn't be found at all goes in `unlisted` in `src/site.js` instead: no nav link, `noindex`, no sitemap entry.
 
 Shipping a page before its copy is written? Set `draft: true` on its entry in `src/site.js`. It's still served and linked, but it carries `noindex` and stays out of the sitemap. List it in `DRAFTS` in the smoke test too.
 

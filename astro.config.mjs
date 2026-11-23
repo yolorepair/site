@@ -1,6 +1,6 @@
 import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
-import { draftPaths } from './src/site.js';
+import { noindexPaths } from './src/site.js';
 
 // Static output only: `astro build` writes plain files to dist/, and nginx
 // serves them. No adapter, no server runtime.
@@ -16,7 +16,7 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      filter: (url) => !draftPaths.includes(new URL(url).pathname),
+      filter: (url) => !noindexPaths.includes(new URL(url).pathname),
     }),
   ],
 });
