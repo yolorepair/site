@@ -81,11 +81,14 @@ go test ./...
 
 The tests run against a fake intake built from `relay/testdata/request-contract.json`. That file is intake's contract, copied from its repo. When intake changes it, copy it again; don't edit it here. A test fails if the relay's rules and the contract disagree.
 
-To build the image:
+To build the image and check it from the outside:
 
 ```bash
 docker build -t yolorepair-site-relay:test relay/
+relay/smoke.sh
 ```
+
+CI runs all of that in the `relay` job and publishes the image as `ghcr.io/yolorepair/site-relay`, with the same tags and the same version number as the site's image.
 
 It reads `INTAKE_URL` and `INTAKE_SUBMIT_TOKEN` from the environment and won't start without both. It listens on 8080.
 
@@ -107,7 +110,7 @@ Shipping a page before its copy is written? Set `draft: true` on its entry in `s
 
 ## How a change gets to the live site
 
-1. Open a pull request. Three checks have to pass: `build` (the image builds for arm64 and amd64, and the smoke test passes), `hadolint` (the Dockerfile lints clean), and `html-and-links`.
+1. Open a pull request. Three checks have to pass: `build` (the image builds for arm64 and amd64, and the smoke test passes), `hadolint` (the Dockerfile lints clean), and `html-and-links`. A fourth, `relay`, tests and builds the relay; it runs on every pull request but isn't required yet.
 2. Merge it. `main` is protected — nothing lands without those checks.
 3. The merge publishes a new image to `ghcr.io/yolorepair/site`, tagged `latest` and with the commit SHA.
 4. The cluster that hosts the site watches `latest` and rolls the new image out by itself.
@@ -116,13 +119,13 @@ This repo's job ends at step 3. The deployment config lives in a separate GitOps
 
 ## Releases
 
-Commits follow [Conventional Commits](https://www.conventionalcommits.org). [release-please](https://github.com/googleapis/release-please) reads them, keeps a release PR open with the next version and changelog, and on merge tags the release and publishes the image as `:X.Y.Z` and `:X.Y`.
+Commits follow [Conventional Commits](https://www.conventionalcommits.org). [release-please](https://github.com/googleapis/release-please) reads them, keeps a release PR open with the next version and changelog, and on merge tags the release and publishes both images as `:X.Y.Z` and `:X.Y`.
 
-Every merge still deploys. A release just gives a version something to pin to. No release has been cut yet, so there's no `CHANGELOG.md` to read.
+Every merge still deploys. A release just gives a version something to pin to. `CHANGELOG.md` has the history.
 
 ## Dependency updates
 
-Dependabot checks npm, the Docker base images and the GitHub Actions versions every Monday and opens one grouped PR per ecosystem. CI runs on each. Nothing merges them for you.
+Dependabot checks npm, the Docker base images, the relay's Go module and the GitHub Actions versions every Monday and opens one grouped PR per ecosystem. CI runs on each. Nothing merges them for you.
 
 Two things are held on purpose: Node stays on 22 and nginx stays on its stable 1.30 line. Moving either is a decision, so Dependabot only offers patch-level bumps for nginx and nothing across a Node major.
 
