@@ -16,6 +16,7 @@ import (
 
 // rig is a relay wired to a fake intake, both on real sockets.
 type rig struct {
+	srv   *server
 	fake  *fakeIntake
 	relay *httptest.Server
 	logs  *bytes.Buffer
@@ -32,11 +33,17 @@ func newRig(t *testing.T) *rig {
 	logs := &bytes.Buffer{}
 	client := newIntakeClient(intakeSrv.URL, c.TestToken)
 	client.backoff = time.Millisecond
-	s := &server{intake: client, log: slog.New(slog.NewJSONHandler(logs, nil))}
+	s := &server{
+		intake:    client,
+		limiter:   newRateLimiter(1000, 1000, time.Hour), // out of the way unless a test sets it
+		challenge: noChallenge{},
+		log:       slog.New(slog.NewJSONHandler(logs, nil)),
+	}
 	relaySrv := httptest.NewServer(s.routes())
 	t.Cleanup(relaySrv.Close)
 
 	return &rig{
+		srv:   s,
 		fake:  fake,
 		relay: relaySrv,
 		logs:  logs,
@@ -156,7 +163,7 @@ func TestWhatIntakeIsSent(t *testing.T) {
 	form := goodForm()
 	form.Set("symptoms", "  Dead.\r\nNo lights.  ")
 	form.Set("phone", "   ")
-	form.Set("website", "https://example.com") // not in the contract
+	form.Set("newsletter", "yes") // not in the contract
 	if loc := r.post(t, form); loc != thanksPath {
 		t.Fatalf("redirected to %q, want %q", loc, thanksPath)
 	}
@@ -346,7 +353,12 @@ func TestIntakeDown(t *testing.T) {
 	logs := &bytes.Buffer{}
 	client := newIntakeClient(dead.URL, "token")
 	client.backoff = time.Millisecond
-	s := &server{intake: client, log: slog.New(slog.NewJSONHandler(logs, nil))}
+	s := &server{
+		intake:    client,
+		limiter:   newRateLimiter(1000, 1000, time.Hour),
+		challenge: noChallenge{},
+		log:       slog.New(slog.NewJSONHandler(logs, nil)),
+	}
 
 	req := httptest.NewRequest(http.MethodPost, "/submit", strings.NewReader(goodForm().Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

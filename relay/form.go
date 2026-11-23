@@ -38,7 +38,8 @@ const maxJSONBytes = 16384
 // shows that to anyone and the values must not reach a log.
 //
 // Form fields the contract doesn't list are ignored rather than forwarded:
-// intake rejects unknown keys.
+// intake rejects unknown keys. The honeypot field is one of them, and is
+// looked at before this runs.
 func parseForm(form url.Values) (req map[string]string, ok bool) {
 	req = make(map[string]string, len(fields))
 	for _, f := range fields {

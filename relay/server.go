@@ -22,8 +22,10 @@ const (
 const maxFormBytes = 64 << 10
 
 type server struct {
-	intake *intakeClient
-	log    *slog.Logger
+	intake    *intakeClient
+	limiter   *rateLimiter
+	challenge challenge
+	log       *slog.Logger
 }
 
 func (s *server) routes() http.Handler {
@@ -50,7 +52,10 @@ func (s *server) submit(w http.ResponseWriter, r *http.Request) {
 
 	outcome, status := s.relay(r)
 	target := problemPath
-	if outcome == "accepted" {
+	switch outcome {
+	case "accepted", "honeypot":
+		// A bot that fills in the hidden field is told it worked. Told it
+		// failed, it tries again.
 		target = thanksPath
 	}
 
@@ -83,9 +88,18 @@ func (s *server) relay(r *http.Request) (outcome string, intakeStatus int) {
 	if err != nil {
 		return "unreadable", 0
 	}
+	if honeypotFilled(form) {
+		return "honeypot", 0
+	}
 	req, ok := parseForm(form)
 	if !ok {
 		return "invalid", 0
+	}
+	if looksLikeSpam(req) {
+		return "spam", 0
+	}
+	if !s.challenge.passes(r, form) {
+		return "challenge_failed", 0
 	}
 	body, err := json.Marshal(req)
 	if err != nil || len(body) > maxJSONBytes {
@@ -94,6 +108,11 @@ func (s *server) relay(r *http.Request) (outcome string, intakeStatus int) {
 	key, err := newKey()
 	if err != nil {
 		return "internal_error", 0
+	}
+	// Last, so only requests that would otherwise be forwarded use up the
+	// allowance.
+	if !s.limiter.allow(clientKey(r)) {
+		return "rate_limited", 0
 	}
 
 	status, err := s.intake.send(r.Context(), body, key)

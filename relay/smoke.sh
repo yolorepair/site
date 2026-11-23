@@ -26,6 +26,7 @@ check "exits 1 with no config" "$?" "1"
 
 docker run -d --name "$NAME" -p 127.0.0.1::8080 \
   -e INTAKE_URL=http://127.0.0.1:9 -e INTAKE_SUBMIT_TOKEN=smoke-test-token \
+  -e RATE_LIMIT_PER_IP=2 \
   "$IMAGE" >/dev/null || { echo "FAIL  the container didn't start"; exit 1; }
 port="$(docker port "$NAME" 8080/tcp | head -1 | sed 's/.*://')"
 base="http://127.0.0.1:$port"
@@ -54,8 +55,20 @@ check "a bad form goes to the problem page" \
   "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -d 'customer_name=Sam' "$base/submit")" \
   "303 $base/request/problem/"
 
+check "a filled honeypot is shown the thanks page" \
+  "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -d "$form&website=x" "$base/submit")" \
+  "303 $base/request/thanks/"
+
+# The limit is 2 per address here. The good form above was the first.
+curl -s -o /dev/null -d "$form" "$base/submit"
+curl -s -o /dev/null -d "$form" "$base/submit"
+
 logs="$(docker logs "$NAME" 2>&1)"
-if grep -q '"outcome":"intake_unreachable"' <<<"$logs"; then pass "logs the outcome"; else fail "logs the outcome"; fi
+for outcome in intake_unreachable invalid honeypot rate_limited; do
+  if grep -q "\"outcome\":\"$outcome\"" <<<"$logs"; then pass "logs $outcome"; else fail "logs $outcome"; fi
+done
+check "the third good form from one address is rate limited" \
+  "$(grep -c '"outcome":"intake_unreachable"' <<<"$logs")" "2"
 if grep -qE 'Sam|example\.com|Game Boy|smoke-test-token' <<<"$logs"; then
   fail "logs carry nothing from the form or the token"
 else
