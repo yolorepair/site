@@ -1,6 +1,6 @@
 # Weekly dependency updates, one grouped PR per ecosystem. CI gates each one:
-# the image has to build for both architectures, pass the smoke test, and the
-# site has to validate.
+# both images have to build for both architectures and pass their smoke tests,
+# the relay's Go tests have to pass, and the site has to validate.
 #
 # These PRs are not merged for you. Read the bump, then merge it.
 version: 2
@@ -46,6 +46,39 @@ updates:
         update-types:
           - "version-update:semver-major"
           - "version-update:semver-minor"
+
+  # The relay's Go base image. A new Go minor (1.27 to 1.28) is a routine
+  # bump here: CI reads its Go version from this Dockerfile and runs the
+  # relay's tests on it.
+  - package-ecosystem: docker
+    directory: /relay
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Los_Angeles
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      relay-docker:
+        patterns: ["*"]
+
+  # The relay's Go module. It uses the standard library only, so this has
+  # nothing to do until the first dependency is added.
+  - package-ecosystem: gomod
+    directory: /relay
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: America/Los_Angeles
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      gomod:
+        patterns: ["*"]
 
   # The actions the workflows call.
   - package-ecosystem: github-actions

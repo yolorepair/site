@@ -1,6 +1,6 @@
 name: lint
 
-# Checks that don't need the image: the Dockerfile itself, and the HTML and
+# Checks that don't need the image: the Dockerfiles themselves, and the HTML and
 # internal links of the built site. The image workflow covers the rest (build,
 # smoke test, publish).
 #
@@ -26,10 +26,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Lint the Dockerfile
+      - name: Lint the site's Dockerfile
         uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: Dockerfile
+
+      - name: Lint the relay's Dockerfile
+        uses: hadolint/hadolint-action@v3.5.0
+        with:
+          dockerfile: relay/Dockerfile
 
   html-and-links:
     runs-on: ubuntu-latest
