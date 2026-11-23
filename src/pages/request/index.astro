@@ -1,0 +1,65 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/form.css';
+// Field names and length caps come from intake's contract, pinned in
+// relay/testdata/request-contract.json. The relay checks them again; these
+// are here so the browser catches a miss before anything is sent.
+---
+<Base
+  title="Request a repair · YOLO Electronics Repair"
+  description="Tell YOLO Electronics Repair in West Sacramento what's broken and what it's doing. Drop-off by appointment or mail-in."
+>
+  <div>
+    <h1>Request a repair</h1>
+    <p class="sub">WHAT IT IS · WHAT IT'S DOING</p>
+  </div>
+  <p class="tag">Fill this in and it's waiting at the bench.</p>
+
+  <form class="request" method="post" action="/request/submit">
+    <div class="field">
+      <label for="customer_name">Your name</label>
+      <input id="customer_name" name="customer_name" type="text" required maxlength="120" autocomplete="name">
+    </div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" required maxlength="254" autocomplete="email" aria-describedby="email-hint">
+      <p class="hint" id="email-hint">The reply comes here. No phone line.</p>
+    </div>
+
+    <div class="field">
+      <label for="device">What is it?</label>
+      <input id="device" name="device" type="text" required maxlength="200" aria-describedby="device-hint">
+      <p class="hint" id="device-hint">Make and model if you have them.</p>
+    </div>
+
+    <div class="field">
+      <label for="symptoms">What's it doing?</label>
+      <textarea id="symptoms" name="symptoms" required maxlength="4000" rows="7" aria-describedby="symptoms-hint"></textarea>
+      <p class="hint" id="symptoms-hint">Or not doing. What happened right before it quit helps too.</p>
+    </div>
+
+    <fieldset class="field">
+      <legend>How does it get here?</legend>
+      <label class="choice"><input type="radio" name="handoff" value="drop_off" required> Drop-off. West Sac and the rest of the 916, by appointment.</label>
+      <label class="choice"><input type="radio" name="handoff" value="mail_in" required> Mail-in. Everyone else.</label>
+    </fieldset>
+
+    <div class="field">
+      <label for="return_address">Return address</label>
+      <textarea id="return_address" name="return_address" maxlength="500" rows="3" autocomplete="street-address" aria-describedby="return-hint"></textarea>
+      <p class="hint" id="return-hint">Mail-in only: where it ships back to. Leave it empty if you'd rather sort that out by email.</p>
+    </div>
+
+    <!-- Not for people. The relay drops anything that fills this in. It's
+         moved off-screen from the stylesheet: the CSP allows no inline styles. -->
+    <div class="hp" aria-hidden="true">
+      <label for="website">Leave this one empty</label>
+      <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
+    </div>
+
+    <button type="submit">Send it</button>
+  </form>
+
+  <p class="note">Rather write an email? <a href="mailto:hello@yolorepair.com">hello@yolorepair.com</a> gets to the same bench.</p>
+</Base>

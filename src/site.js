@@ -11,4 +11,13 @@ export const pages = [
   { path: '/contact/', label: 'Contact' },
 ];
 
-export const draftPaths = pages.filter((p) => p.draft).map((p) => p.path);
+// Served, but not meant to be found: no nav link, noindex, out of the sitemap.
+// The repair-request form sits here until it's wired to the bench. When it
+// goes live, /request/ moves up into `pages`; the thanks and problem pages
+// stay here for good, since nobody should land on them from a search.
+export const unlisted = ['/request/', '/request/thanks/', '/request/problem/'];
+
+export const noindexPaths = [
+  ...pages.filter((p) => p.draft).map((p) => p.path),
+  ...unlisted,
+];

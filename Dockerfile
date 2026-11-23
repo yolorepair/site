@@ -28,6 +28,9 @@ LABEL org.opencontainers.image.source="https://github.com/yolorepair/site" \
 
 COPY nginx/security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+# Runs before nginx on every start and writes the /request/submit location
+# from RELAY_URL. See the comments in the script.
+COPY --chmod=0755 nginx/40-relay-location.sh /docker-entrypoint.d/40-relay-location.sh
 COPY --from=build /src/dist/ /usr/share/nginx/html/
 
 EXPOSE 8080

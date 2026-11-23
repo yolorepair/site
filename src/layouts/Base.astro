@@ -4,7 +4,7 @@
 import '../styles/global.css';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { draftPaths } from '../site.js';
+import { noindexPaths } from '../site.js';
 
 const SITE_NAME = 'YOLO Electronics Repair';
 const OG_ALT = 'YOLO Electronics Repair. You let the smoke out. We put it back in.';
@@ -14,7 +14,7 @@ const { title, description, notFound = false } = Astro.props;
 const path = Astro.url.pathname;
 const canonical = new URL(path, Astro.site).href;
 const ogImage = new URL('/og-image.png', Astro.site).href;
-const noindex = notFound || draftPaths.includes(path);
+const noindex = notFound || noindexPaths.includes(path);
 ---
 <!doctype html>
 <html lang="en">
