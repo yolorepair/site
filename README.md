@@ -90,7 +90,28 @@ relay/smoke.sh
 
 CI runs all of that in the `relay` job and publishes the image as `ghcr.io/yolorepair/site-relay`, with the same tags and the same version number as the site's image.
 
-It reads `INTAKE_URL` and `INTAKE_SUBMIT_TOKEN` from the environment and won't start without both. It listens on 8080.
+It reads its settings from the environment and listens on 8080:
+
+| Setting | What it is |
+|---|---|
+| `INTAKE_URL` | Where intake is. Required. |
+| `INTAKE_SUBMIT_TOKEN` | The write-only token. Required. |
+| `RATE_LIMIT_PER_IP` | Requests forwarded per sender per hour. Default 5. |
+| `RATE_LIMIT_TOTAL` | Requests forwarded per hour, everyone together. Default 30. |
+| `CHALLENGE` | `none`, the only value today. It's where a CAPTCHA would plug in. |
+
+It won't start without the first two, or with a setting it can't read.
+
+### Spam checks
+
+Nothing third-party. Four things stand between a bot and the bench:
+
+- **A hidden field.** The form has a `website` input people never see. A bot that fills it in is shown the thank-you page and nothing is sent.
+- **A look at the text.** A description that is mostly links, or a name with a link in it, goes to the problem page. One or two links next to a real description are fine.
+- **Rate limits.** So many per sender and so many overall, per hour. Over the limit goes to the problem page, which has the email address on it.
+- **Size caps**, the same ones intake enforces.
+
+The counters live in memory, so they reset on a restart and aren't shared between copies. The relay is meant to run as one copy. The sender's address comes from the `CF-Connecting-IP` header, which is only trustworthy because nothing but the site can reach the relay. That rule lives in the cluster's config, not here.
 
 ## Rules the build enforces
 
