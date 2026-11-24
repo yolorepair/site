@@ -65,6 +65,7 @@ Then open `http://localhost:8080`.
 | `public/` | Files served as-is: favicons, the link-preview image, `robots.txt`. |
 | `nginx/` | Server config: headers, caching, the 404, and the form's path to the relay. |
 | `test/smoke.sh` | The smoke test. |
+| `test/e2e.sh` | The end-to-end test: site, relay and a fake intake together. |
 | `Dockerfile` | Two stages: Node builds the site, nginx serves it. |
 | `relay/` | The relay: a small Go service for the repair-request form. Its own image. |
 
@@ -90,7 +91,21 @@ That last one has a price: nginx's resolver doesn't read the search domains in `
 
 The location is written at container start by `nginx/40-relay-location.sh` into `/tmp/relay-location.conf`, so `/tmp` has to be writable. It already has to be: nginx keeps its pid file there.
 
-The smoke test covers all of the cases above against a stand-in relay. The real relay behind the real site isn't tested together yet.
+The smoke test covers all of the cases above against a stand-in relay. The end-to-end test below runs the real one.
+
+### End to end
+
+```bash
+docker build -t yolorepair-site:test .
+docker build -t yolorepair-site-relay:test relay/
+test/e2e.sh
+```
+
+That puts the site image, the relay image and a fake intake (`test/e2e/fake-intake/`) on one Docker network. It reads the form off the site, fills in every field it finds, posts it, and checks what the fake intake received: the fields, the token, the idempotency key. Then the honeypot, a bad form, the rate limit, intake down and relay down. It needs `jq`.
+
+Each image has its own smoke test. This one is for the two drifting apart — rename a field on the form and forget the relay, and this is what fails. Add a field to the form and it fails until the test knows what to type into it. CI runs it as the `e2e` job.
+
+The fake intake only writes down what it's sent. Holding the relay to intake's real contract is the job of the relay's own tests.
 
 ## The relay
 
@@ -157,7 +172,7 @@ Shipping a page before its copy is written? Set `draft: true` on its entry in `s
 
 ## How a change gets to the live site
 
-1. Open a pull request. Three checks have to pass: `build` (the image builds for arm64 and amd64, and the smoke test passes), `hadolint` (the Dockerfile lints clean), and `html-and-links`. A fourth, `relay`, tests and builds the relay; it runs on every pull request but isn't required yet.
+1. Open a pull request. Three checks have to pass: `build` (the image builds for arm64 and amd64, and the smoke test passes), `hadolint` (the Dockerfile lints clean), and `html-and-links`. Two more run on every pull request but aren't required yet: `relay` tests and builds the relay, and `e2e` runs the form end to end.
 2. Merge it. `main` is protected — nothing lands without those checks.
 3. The merge publishes a new image to `ghcr.io/yolorepair/site`, tagged `latest` and with the commit SHA.
 4. The cluster that hosts the site watches `latest` and rolls the new image out by itself.
