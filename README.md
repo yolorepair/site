@@ -78,7 +78,7 @@ One small script, `src/scripts/address.js`, makes the address quicker. It's buil
 - **Suggestions on the Street box.** It asks `/request/address` on the site itself, and picking a match fills street, city, state and ZIP.
 - **A note on drop-off vs mail-in from the ZIP.** A Sacramento-area ZIP (`956`, `957`, `958`) pre-selects drop-off if nothing is picked yet. It never changes a choice someone made; when the two disagree it says so under the question.
 
-**It's built but not open.** The form, `/request/thanks/` and `/request/problem/` are in `unlisted` in `src/site.js`: served, but with no nav link, `noindex`, and out of the sitemap. Nothing on the site links to them yet.
+**It's open.** `/request/` is in the nav and the sitemap, and every other page points at it, with the email address next to it as the fallback. `/request/thanks/` and `/request/problem/` are in `unlisted` in `src/site.js`: served, but `noindex` and out of the sitemap, since nobody should land on them from a search.
 
 nginx hands two paths to services outside the site's container: `POST /request/submit` to the relay, and `GET /request/address` to a [Photon](https://github.com/komoot/photon) geocoder (open source, OpenStreetMap data, run in the same cluster — no paid API, and what someone types never leaves it). Nothing else leaves the container. Two settings say where they are:
 
