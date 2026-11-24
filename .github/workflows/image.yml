@@ -1,6 +1,7 @@
 name: image
 
-# Two images, one job each: the site (build) and the relay (relay).
+# Two images, one job each: the site (build) and the relay (relay). A third
+# job (e2e) runs the two together.
 #
 # Push to main: smoke-test the image, then build multi-arch and push
 # :latest and :<sha> to GHCR. Pull requests run the same build and test
@@ -220,3 +221,35 @@ jobs:
             exit 1
           fi
           echo "✓ linux/arm64 present in published manifest"
+
+  # The two images together, with a fake intake behind them: post the form the
+  # site serves and check what comes out the far end. Builds its own copies
+  # from the other two jobs' caches, so it doesn't wait on them and pushes
+  # nothing.
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build the site image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          tags: yolorepair-site:test
+          cache-from: type=gha
+
+      - name: Build the relay image
+        uses: docker/build-push-action@v7
+        with:
+          context: relay
+          load: true
+          tags: yolorepair-site-relay:test
+          cache-from: type=gha,scope=relay
+
+      - name: End-to-end test
+        run: test/e2e.sh yolorepair-site:test yolorepair-site-relay:test
