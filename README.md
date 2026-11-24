@@ -189,7 +189,7 @@ Shipping a page before its copy is written? Set `draft: true` on its entry in `s
 
 ## How a change gets to the live site
 
-1. Open a pull request. Three checks have to pass: `build` (the image builds for arm64 and amd64, and the smoke test passes), `hadolint` (the Dockerfile lints clean), and `html-and-links`. Two more run on every pull request but aren't required yet: `relay` tests and builds the relay, and `e2e` runs the form end to end.
+1. Open a pull request. Five checks have to pass: `build` (the image builds for arm64 and amd64, and the smoke test passes), `hadolint` (the Dockerfile lints clean), `html-and-links`, `relay` (the relay's tests pass and its image builds), and `e2e` (the form runs end to end).
 2. Merge it. `main` is protected — nothing lands without those checks.
 3. The merge publishes a new image to `ghcr.io/yolorepair/site`, tagged `latest` and with the commit SHA.
 4. The cluster that hosts the site watches `latest` and rolls the new image out by itself.
