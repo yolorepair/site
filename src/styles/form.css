@@ -15,3 +15,18 @@
 /* The honeypot: off-screen, so a person never sees or tabs to it. Not
    display:none, which the simpler bots know to skip. */
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+/* The return address: one box per line, city/state/ZIP on one row when
+   there's room. */
+.address > label{padding:0;font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.address-row{display:flex;flex-wrap:wrap;gap:12px}
+.address-row > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.address-row label{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+.address-city{flex:2 1 180px}
+.address-state{flex:1 1 80px}
+.address-zip{flex:1 1 100px}
+/* Suggestions under the Street box, added by src/scripts/address.js. */
+.suggest{position:relative}
+.suggestions{position:absolute;left:0;right:0;top:100%;z-index:10;margin:0;padding:0;list-style:none;background:var(--deep);border:2px solid var(--copper);border-top:0;max-height:16em;overflow-y:auto}
+.suggestions li{padding:8px 12px;font-size:15px;line-height:1.4;cursor:pointer}
+.suggestions li[aria-selected=true],.suggestions li:hover{background:var(--copper);color:var(--deep)}
+.visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}

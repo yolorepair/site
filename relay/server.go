@@ -91,6 +91,10 @@ func (s *server) relay(r *http.Request) (outcome string, intakeStatus int) {
 	if honeypotFilled(form) {
 		return "honeypot", 0
 	}
+	form, ok := joinAddress(form)
+	if !ok {
+		return "invalid", 0
+	}
 	req, ok := parseForm(form)
 	if !ok {
 		return "invalid", 0

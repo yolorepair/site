@@ -77,7 +77,11 @@ value_for() {
     device)         echo "Technics SL-1200MK2" ;;
     symptoms)       printf 'Platter spins, no audio out of the left channel.\nIt quit after a gig.' ;;
     handoff)        echo "mail_in" ;;
-    return_address) echo "123 Example St, Sacramento CA 95814" ;;
+    address_line1)  echo "123 Example St" ;;
+    address_line2)  echo "Unit 4" ;;
+    address_city)   echo "Sacramento" ;;
+    address_state)  echo "CA" ;;
+    address_zip)    echo "95814" ;;
     website)        echo "" ;;
     *)              return 1 ;;
   esac
@@ -120,14 +124,15 @@ else
   fail "it came with an idempotency key (got '$(jq -r '.idempotency_key' <<<"$got")')"
 fi
 # Exactly these fields and values: nothing added, the honeypot not passed on,
-# the line break in the description kept as one character.
+# the line break in the description kept as one character, and the address
+# boxes joined into intake's one return_address.
 want="$(jq -nS '{
   customer_name: "Sam Example",
   email: "sam@example.com",
   device: "Technics SL-1200MK2",
   symptoms: "Platter spins, no audio out of the left channel.\nIt quit after a gig.",
   handoff: "mail_in",
-  return_address: "123 Example St, Sacramento CA 95814"
+  return_address: "123 Example St\nUnit 4\nSacramento, CA 95814"
 }')"
 check "intake received what was typed, and nothing else" "$want" "$(jq -S '.body' <<<"$got")"
 

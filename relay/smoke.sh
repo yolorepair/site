@@ -55,6 +55,11 @@ check "a bad form goes to the problem page" \
   "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -d 'customer_name=Sam' "$base/submit")" \
   "303 $base/request/problem/"
 
+# The address comes in boxes that the relay joins; a box over its cap is a bad form.
+check "an address box over its cap goes to the problem page" \
+  "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -d "$form&address_zip=95691-123456" "$base/submit")" \
+  "303 $base/request/problem/"
+
 check "a filled honeypot is shown the thanks page" \
   "$(curl -s -o /dev/null -w '%{http_code} %{redirect_url}' -d "$form&website=x" "$base/submit")" \
   "303 $base/request/thanks/"

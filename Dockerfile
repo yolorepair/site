@@ -31,6 +31,8 @@ COPY nginx/default.conf /etc/nginx/conf.d/default.conf
 # Runs before nginx on every start and writes the /request/submit location
 # from RELAY_URL. See the comments in the script.
 COPY --chmod=0755 nginx/40-relay-location.sh /docker-entrypoint.d/40-relay-location.sh
+# Same, for /request/address from PHOTON_URL (the form's address suggestions).
+COPY --chmod=0755 nginx/41-address-location.sh /docker-entrypoint.d/41-address-location.sh
 COPY --from=build /src/dist/ /usr/share/nginx/html/
 
 EXPOSE 8080
