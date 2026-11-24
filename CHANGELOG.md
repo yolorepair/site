@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/yolorepair/site/compare/v0.6.0...v0.6.1) (2026-11-24)
+
+
+### Documentation
+
+* **readme:** relay and e2e are required checks ([#56](https://github.com/yolorepair/site/issues/56)) ([8d44448](https://github.com/yolorepair/site/commit/8d444480f85fc6e40ea7ddcef87faa13e008a34a))
+
 ## [0.6.0](https://github.com/yolorepair/site/compare/v0.5.0...v0.6.0) (2026-11-24)
 
 
