@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/yolorepair/site/compare/v0.5.0...v0.6.0) (2026-11-24)
+
+
+### Features
+
+* **request:** split the return address into boxes with Photon type-ahead ([b23d3cf](https://github.com/yolorepair/site/commit/b23d3cf8490c175f20de007f4a7172febbddc577))
+
 ## [0.5.0](https://github.com/yolorepair/site/compare/v0.4.0...v0.5.0) (2026-11-24)
 
 
