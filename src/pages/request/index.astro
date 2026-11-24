@@ -3,7 +3,8 @@ import Base from '../../layouts/Base.astro';
 import '../../styles/form.css';
 // Field names and length caps come from intake's contract, pinned in
 // relay/testdata/request-contract.json. The relay checks them again; these
-// are here so the browser catches a miss before anything is sent.
+// are here so the browser catches a miss before anything is sent. The
+// address boxes are the relay's own split of return_address (relay/address.go).
 ---
 <Base
   title="Request a repair · YOLO Electronics Repair"
@@ -43,13 +44,36 @@ import '../../styles/form.css';
       <legend>How does it get here?</legend>
       <label class="choice"><input type="radio" name="handoff" value="drop_off" required> Drop-off. West Sac and the rest of the 916, by appointment.</label>
       <label class="choice"><input type="radio" name="handoff" value="mail_in" required> Mail-in. Everyone else.</label>
+      <p class="hint" id="handoff-note" aria-live="polite"></p>
     </fieldset>
 
-    <div class="field">
-      <label for="return_address">Return address</label>
-      <textarea id="return_address" name="return_address" maxlength="500" rows="3" autocomplete="street-address" aria-describedby="return-hint"></textarea>
+    <!-- Separate boxes so a browser or password manager can fill them in,
+         and so a picked suggestion lands in the right places. The relay
+         joins them into the one return_address intake takes. -->
+    <fieldset class="field address" aria-describedby="return-hint">
+      <legend>Return address</legend>
       <p class="hint" id="return-hint">Mail-in only: where it ships back to. Leave it empty if you'd rather sort that out by email.</p>
-    </div>
+      <label for="address_line1">Street</label>
+      <div class="suggest">
+        <input id="address_line1" name="address_line1" type="text" maxlength="200" autocomplete="address-line1">
+      </div>
+      <label for="address_line2">Apt, suite, unit</label>
+      <input id="address_line2" name="address_line2" type="text" maxlength="200" autocomplete="address-line2">
+      <div class="address-row">
+        <div class="address-city">
+          <label for="address_city">City</label>
+          <input id="address_city" name="address_city" type="text" maxlength="100" autocomplete="address-level2">
+        </div>
+        <div class="address-state">
+          <label for="address_state">State</label>
+          <input id="address_state" name="address_state" type="text" maxlength="50" autocomplete="address-level1">
+        </div>
+        <div class="address-zip">
+          <label for="address_zip">ZIP</label>
+          <input id="address_zip" name="address_zip" type="text" maxlength="10" autocomplete="postal-code" inputmode="numeric">
+        </div>
+      </div>
+    </fieldset>
 
     <!-- Not for people. The relay drops anything that fills this in. It's
          moved off-screen from the stylesheet: the CSP allows no inline styles. -->
@@ -62,4 +86,11 @@ import '../../styles/form.css';
   </form>
 
   <p class="note">Rather write an email? <a href="mailto:hello@yolorepair.com">hello@yolorepair.com</a> gets to the same bench.</p>
+
+  <!-- Address suggestions and the drop-off note. Optional: with this off or
+       failing, every box above still takes typed text. Bundled into a file
+       under /_astro/, since the CSP allows no inline script. -->
+  <script>
+    import '../../scripts/address.js';
+  </script>
 </Base>

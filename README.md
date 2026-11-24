@@ -71,15 +71,21 @@ Then open `http://localhost:8080`.
 
 ## The request form
 
-`/request/` is a plain HTML form: name, email, what it is, what it's doing, drop-off or mail-in. No JavaScript. It posts to `/request/submit` on the same site, so the CSP's `form-action 'self'` still holds.
+`/request/` is a plain HTML form: name, email, what it is, what it's doing, drop-off or mail-in, and a return address in separate boxes (street, second line, city, state, ZIP) so a browser or password manager can fill it in. It posts to `/request/submit` on the same site, so the CSP's `form-action 'self'` still holds.
+
+One small script, `src/scripts/address.js`, makes the address quicker. It's built into a file under `/_astro/`, since the CSP allows no inline script, and the form works the same without it:
+
+- **Suggestions on the Street box.** It asks `/request/address` on the site itself, and picking a match fills street, city, state and ZIP.
+- **A note on drop-off vs mail-in from the ZIP.** A Sacramento-area ZIP (`956`, `957`, `958`) pre-selects drop-off if nothing is picked yet. It never changes a choice someone made; when the two disagree it says so under the question.
 
 **It's built but not open.** The form, `/request/thanks/` and `/request/problem/` are in `unlisted` in `src/site.js`: served, but with no nav link, `noindex`, and out of the sitemap. Nothing on the site links to them yet.
 
-nginx hands `POST /request/submit` to the relay, and that's the only request that leaves the site's container. One setting says where the relay is:
+nginx hands two paths to services outside the site's container: `POST /request/submit` to the relay, and `GET /request/address` to a [Photon](https://github.com/komoot/photon) geocoder (open source, OpenStreetMap data, run in the same cluster — no paid API, and what someone types never leaves it). Nothing else leaves the container. Two settings say where they are:
 
 | Setting | What it is |
 |---|---|
 | `RELAY_URL` | The relay's address, like `http://site-relay.shop.svc.cluster.local:8080`. Scheme, host and port, nothing else. Optional. |
+| `PHOTON_URL` | Photon's address, like `http://photon.photon.svc.cluster.local:2322`. Same rules as `RELAY_URL`. Optional. |
 
 The rule is that the form may break and the site may not:
 
@@ -87,11 +93,20 @@ The rule is that the form may break and the site may not:
 - **`RELAY_URL` set to something that isn't a plain address** — same, and the start-up log says so.
 - **Relay down, or its name doesn't resolve** — same, per request. nginx looks the name up when a form arrives, not at start, so a missing relay can't stop the site from starting.
 
+Photon gets the same treatment. With `PHOTON_URL` unset, unusable, or Photon down, `/request/address` answers with an empty list and the boxes are plain text fields.
+
+`/request/address` is locked down so it can't be used as a way into Photon:
+
+- **Only `q` goes through.** The rest of Photon's query is fixed in nginx: houses and streets, five at most, biased toward the shop. Every other parameter is dropped. A `q` over 300 characters gets nothing.
+- **Nothing about the visitor goes with it.** No cookies, no referrer, no user agent.
+- **Rate-limited.** 4 a second per visitor (by `CF-Connecting-IP`, burst 20) and 20 a second for everyone (burst 60). `GET` only.
+- **Kept out of the logs.** What someone types is part of their address, so that path has no access log and only critical errors.
+
 That last one has a price: nginx's resolver doesn't read the search domains in `/etc/resolv.conf`. In Kubernetes, give `RELAY_URL` the full service name ending in `.svc.cluster.local`. A short name never resolves, and every form ends on the problem page.
 
-The location is written at container start by `nginx/40-relay-location.sh` into `/tmp/relay-location.conf`, so `/tmp` has to be writable. It already has to be: nginx keeps its pid file there.
+The locations are written at container start by `nginx/40-relay-location.sh` and `nginx/41-address-location.sh` into `/tmp/relay-location.conf` and `/tmp/address-location.conf`, so `/tmp` has to be writable. It already has to be: nginx keeps its pid file there.
 
-The smoke test covers all of the cases above against a stand-in relay. The end-to-end test below runs the real one.
+The smoke test covers all of the cases above against a stand-in relay and a stand-in Photon. The end-to-end test below runs the real relay; nothing here runs the real Photon.
 
 ### End to end
 
@@ -140,6 +155,8 @@ It reads its settings from the environment and listens on 8080:
 | `CHALLENGE` | `none`, the only value today. It's where a CAPTCHA would plug in. |
 
 It won't start without the first two, or with a setting it can't read.
+
+The form sends the return address in boxes (`address_line1`, `address_line2`, `address_city`, `address_state`, `address_zip`). Intake takes one `return_address`, so the relay joins them, one line each and `City, ST 95691` last, then checks the result against intake's 500-character cap. Each box has its own cap and must be one line. A form that sends the old single `return_address` box still works; one that sends both is turned away.
 
 ### Spam checks
 

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Smoke test for the site image: run it, then check status codes, headers,
 # compression and the link-preview tags. The last section starts the image a
-# few more times to check the repair-request form's path to the relay.
+# few more times to check the repair-request form's path to the relay and
+# its address suggestions' path to Photon.
 #
 #   test/smoke.sh [image]        # default image: yolorepair-site:test
 #
@@ -20,7 +21,7 @@ fails=0
 DRAFTS=""
 
 cleanup() {
-  docker rm -f "$NAME" "$NAME-noresolve" "$NAME-badurl" "$NAME-proxy" "$NAME-relay" >/dev/null 2>&1 || true
+  docker rm -f "$NAME" "$NAME-noresolve" "$NAME-badurl" "$NAME-proxy" "$NAME-relay" "$NAME-photon" >/dev/null 2>&1 || true
   docker network rm "$NAME-net" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
@@ -130,7 +131,15 @@ for page in request request/thanks request/problem; do
   has "/$page/ is noindex" '<meta name="robots" content="noindex">' "$body"
   has "/$page/ has the nav" '<nav aria-label="Site">' "$body"
   lacks "/$page/ is not in the sitemap" "yolorepair.com/$page/" "$sitemap"
-  lacks "/$page/ has no script" "<script" "$body"
+  # The form loads one script, its address suggestions, from a built file:
+  # the CSP allows no inline script. The other two pages have none.
+  case "$page" in
+    request)
+      has "/$page/ loads its script from a file" '<script type="module" src="/_astro/' "$body"
+      lacks "/$page/ has no inline script" "<script>" "$body" ;;
+    *)
+      lacks "/$page/ has no script" "<script" "$body" ;;
+  esac
   lacks "/$page/ has no phone number" "tel:" "$body"
   lacks "/$page/ prints no price" '$' "$body"
   lacks "/$page/ promises no warranty" "arranty" "$body"
@@ -150,7 +159,15 @@ has "form has the device field" 'name="device" type="text" required maxlength="2
 has "form has the symptoms field" 'name="symptoms" required maxlength="4000"' "$form"
 has "form offers drop-off" 'name="handoff" value="drop_off" required' "$form"
 has "form offers mail-in" 'name="handoff" value="mail_in" required' "$form"
-has "form has the return address" 'name="return_address" maxlength="500"' "$form"
+# The return address, one box per line; the relay joins them into intake's
+# return_address (relay/address.go). The autocomplete tokens are what lets a
+# browser fill them in.
+has "form has the street" 'name="address_line1" type="text" maxlength="200" autocomplete="address-line1"' "$form"
+has "form has the second line" 'name="address_line2" type="text" maxlength="200" autocomplete="address-line2"' "$form"
+has "form has the city" 'name="address_city" type="text" maxlength="100" autocomplete="address-level2"' "$form"
+has "form has the state" 'name="address_state" type="text" maxlength="50" autocomplete="address-level1"' "$form"
+has "form has the ZIP" 'name="address_zip" type="text" maxlength="10" autocomplete="postal-code"' "$form"
+lacks "form has no single address box" 'name="return_address"' "$form"
 has "form has the honeypot" 'name="website" type="text" tabindex="-1" autocomplete="off"' "$form"
 lacks "form has no phone field" 'name="phone"' "$form"
 has "problem page has the email" 'href="mailto:hello@yolorepair.com"' "$(curl -s "$BASE/request/problem/")"
@@ -167,6 +184,17 @@ check "no RELAY_URL: GET /request/submit goes back to the form" "303 /request/" 
 check "the submit path isn't cached" "no-store" "$(header cache-control -d "$GOOD_FORM" "$BASE/request/submit")"
 has "CSP on the submit path" "default-src 'self'" "$(header content-security-policy -d "$GOOD_FORM" "$BASE/request/submit")"
 has "start-up log says there's no relay" "RELAY_URL isn't set" "$(docker logs "$NAME" 2>&1)"
+
+# No PHOTON_URL either: the address suggestions answer with nothing to
+# suggest, and the form's boxes stay plain text fields.
+EMPTY='{"type":"FeatureCollection","features":[]}'
+# suggest <base> [curl args...] -> body of GET /request/address?q=123+main
+suggest() { local base="$1"; shift; curl -s "$@" "$base/request/address?q=123+main"; }
+check "no PHOTON_URL: no suggestions" "$EMPTY" "$(suggest "$BASE")"
+check "no PHOTON_URL: answer is JSON" "application/json" "$(header content-type "$BASE/request/address?q=123+main")"
+check "suggestions aren't cached" "no-store" "$(header cache-control "$BASE/request/address?q=123+main")"
+has "CSP on the suggestions path" "default-src 'self'" "$(header content-security-policy "$BASE/request/address?q=123+main")"
+has "start-up log says there's no geocoder" "PHOTON_URL isn't set" "$(docker logs "$NAME" 2>&1)"
 
 # Sitemap and robots.txt
 check "GET /robots.txt is 200" "200" "$(status "$BASE/robots.txt")"
@@ -261,8 +289,9 @@ has "twitter:card" '<meta name="twitter:card" content="summary_large_image">' "$
 # Body
 has "links back to mrcupp.com" '<a href="https://mrcupp.com/">mrcupp.com</a>' "$html"
 
-# The form's path to the relay. The rule: the form may break, the site may
-# not. Each case below starts the image again with a different RELAY_URL.
+# The form's path to the relay and the suggestions' path to Photon. The rule:
+# the form may break, the site may not. Each case below starts the image again
+# with a different RELAY_URL and PHOTON_URL.
 
 # start <suffix> <docker run args...> -> starts a container, prints its base URL
 start() {
@@ -278,15 +307,18 @@ start() {
 
 # A relay whose name doesn't resolve: not deployed yet, or a typo. nginx would
 # refuse to start if it looked the name up at start.
-base="$(start noresolve -e RELAY_URL=http://relay.invalid:8080 "$IMAGE")"
+base="$(start noresolve -e RELAY_URL=http://relay.invalid:8080 -e PHOTON_URL=http://photon.invalid:2322 "$IMAGE")"
 check "unresolvable relay: the site still serves" "200" "$(status "$base/")"
 check "unresolvable relay: a posted form goes to the problem page" "303 /request/problem/" "$(post "$base")"
+check "unresolvable Photon: no suggestions" "$EMPTY" "$(suggest "$base")"
 
 # A RELAY_URL that would break nginx's config if it were written into it.
-base="$(start badurl -e 'RELAY_URL=http://relay:8080/; } bogus {' "$IMAGE")"
+base="$(start badurl -e 'RELAY_URL=http://relay:8080/; } bogus {' -e 'PHOTON_URL=http://photon:2322/api?x=1; } bogus {' "$IMAGE")"
 check "unusable RELAY_URL: the site still serves" "200" "$(status "$base/")"
 check "unusable RELAY_URL: a posted form goes to the problem page" "303 /request/problem/" "$(post "$base")"
-has "unusable RELAY_URL: the start-up log says so" "isn't a plain http://host:port address" "$(docker logs "$NAME-badurl" 2>&1)"
+has "unusable RELAY_URL: the start-up log says so" "RELAY_URL isn't a plain http://host:port address" "$(docker logs "$NAME-badurl" 2>&1)"
+check "unusable PHOTON_URL: no suggestions" "$EMPTY" "$(suggest "$base")"
+has "unusable PHOTON_URL: the start-up log says so" "PHOTON_URL isn't a plain http://host:port address" "$(docker logs "$NAME-badurl" 2>&1)"
 
 # A relay that answers. This one is a stand-in: nginx from the same image,
 # saying what the real relay says to a good form and echoing back what it was
@@ -312,7 +344,28 @@ http {
 }
 CONF
   exec nginx -c /tmp/stand-in.conf -g "daemon off;"' >/dev/null
-base="$(start proxy --network "$NAME-net" -e RELAY_URL=http://relay:8080/ "$IMAGE")"
+# A Photon stand-in, the same way: nginx from the same image, answering any
+# search with one match and echoing back what it was asked and sent.
+docker run -d --name "$NAME-photon" --network "$NAME-net" --network-alias photon --entrypoint sh "$IMAGE" -c '
+  cat >/tmp/stand-in.conf <<CONF
+pid /tmp/stand-in.pid;
+events {}
+http {
+  server {
+    listen 2322;
+    location = /api {
+      default_type application/json;
+      add_header X-Saw-Args \$args always;
+      add_header X-Saw-Cookie "[\$http_cookie]" always;
+      add_header X-Saw-Agent "[\$http_user_agent]" always;
+      return 200 "{\\"type\\":\\"FeatureCollection\\",\\"features\\":[{\\"properties\\":{\\"housenumber\\":\\"123\\",\\"street\\":\\"Main Street\\"}}]}";
+    }
+    location = /reverse { return 200 "reverse"; }
+  }
+}
+CONF
+  exec nginx -c /tmp/stand-in.conf -g "daemon off;"' >/dev/null
+base="$(start proxy --network "$NAME-net" -e RELAY_URL=http://relay:8080/ -e PHOTON_URL=http://photon:2322 "$IMAGE")"
 has "start-up log names the relay" "/request/submit goes to http://relay:8080" "$(docker logs "$NAME-proxy" 2>&1)"
 check "relay up: a posted form goes where the relay says" "303 /request/thanks/" "$(post "$base")"
 answer="$(curl -s -o /dev/null -D - -d "$GOOD_FORM" -H 'CF-Connecting-IP: 203.0.113.7' "$base/request/submit" | tr -d '\r')"
@@ -330,6 +383,39 @@ check "a form over 64k goes to the problem page" "303 /request/problem/" \
   "$(curl -s -o /dev/null -w '%{http_code} %header{location}' -d "symptoms=$big" "$base/request/submit")"
 check "a 60k form reaches the relay" "303 /request/thanks/" \
   "$(curl -s -o /dev/null -w '%{http_code} %header{location}' -d "symptoms=${big:0:60000}" "$base/request/submit")"
+
+# Address suggestions through the stand-in.
+has "start-up log names the geocoder" "/request/address goes to http://photon:2322" "$(docker logs "$NAME-proxy" 2>&1)"
+has "Photon up: suggestions come back" '"street":"Main Street"' "$(suggest "$base")"
+answer="$(curl -s -o /dev/null -D - -H 'Cookie: session=abc' -A 'Sneaky/1.0' \
+  "$base/request/address?q=123+main&limit=500&layer=country&osm_tag=amenity" | tr -d '\r')"
+has "Photon is asked q, with the query fixed here" \
+  "X-Saw-Args: q=123+main&limit=5&lang=en&layer=house&layer=street&lat=38.58&lon=-121.53" "$answer"
+has "Photon isn't sent the visitor's cookies" "X-Saw-Cookie: []" "$answer"
+has "Photon isn't sent the visitor's browser" "X-Saw-Agent: []" "$answer"
+has "suggestions through Photon aren't cached" "Cache-Control: no-store" "$answer"
+has "suggestions through Photon carry the CSP" "Content-Security-Policy: default-src 'self'" "$answer"
+check "a q can't smuggle in a parameter" "1" \
+  "$(curl -s -o /dev/null -D - "$base/request/address?q=main%26limit%3D500" | tr -d '\r' | grep -c 'X-Saw-Args: q=main%26limit%3D500&limit=5&')"
+check "no q: no suggestions, Photon not asked" "$EMPTY" "$(curl -s "$base/request/address")"
+check "a q over 300 characters: no suggestions" "$EMPTY" "$(curl -s "$base/request/address?q=$(head -c 301 /dev/zero | tr '\0' 'a')")"
+check "only GET is allowed" "403" "$(status -d 'q=123' "$base/request/address")"
+check "only /api is reachable on Photon" "404" "$(status "$base/request/address/reverse")"
+# 4 a second per visitor with a burst of 20: forty at once runs over.
+limited=0
+for _ in $(seq 1 40); do
+  [ "$(status -H 'CF-Connecting-IP: 203.0.113.9' "$base/request/address?q=123+main")" = "429" ] && limited=$((limited + 1))
+done
+if [ "$limited" -gt 0 ]; then pass "suggestions are rate-limited per visitor ($limited of 40 turned away)"; else fail "suggestions are rate-limited per visitor (none of 40 turned away)"; fi
+check "another visitor isn't held up by that one" '"street":"Main Street"' \
+  "$(suggest "$base" -H 'CF-Connecting-IP: 198.51.100.4' | grep -o '"street":"Main Street"')"
+
+docker rm -f "$NAME-photon" >/dev/null
+check "Photon down: no suggestions" "$EMPTY" "$(suggest "$base" -H 'CF-Connecting-IP: 192.0.2.1')"
+check "Photon down: the form page still serves" "200" "$(status "$base/request/")"
+# Rate limits and a dead Photon both make nginx log errors, which normally
+# carry the request line.
+lacks "what someone types stays out of the logs" "123+main" "$(docker logs "$NAME-proxy" 2>&1)"
 
 # The relay goes away while the site is running.
 docker rm -f "$NAME-relay" >/dev/null
