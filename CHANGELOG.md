@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/yolorepair/site/compare/v0.4.0...v0.5.0) (2026-11-24)
+
+
+### Features
+
+* **site:** open the repair-request form: nav, calls to action, sitemap ([#50](https://github.com/yolorepair/site/issues/50)) ([afd5154](https://github.com/yolorepair/site/commit/afd515423f701d5dd7e7c252c0d8d8146d396e6d))
+
 ## [0.4.0](https://github.com/yolorepair/site/compare/v0.3.0...v0.4.0) (2026-11-23)
 
 
