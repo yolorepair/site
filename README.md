@@ -73,7 +73,7 @@ Then open `http://localhost:8080`.
 
 `/request/` is a plain HTML form: name, email, what it is, what it's doing, drop-off or mail-in. No JavaScript. It posts to `/request/submit` on the same site, so the CSP's `form-action 'self'` still holds.
 
-**It's built but not open.** The form, `/request/thanks/` and `/request/problem/` are in `unlisted` in `src/site.js`: served, but with no nav link, `noindex`, and out of the sitemap. Nothing on the site links to them yet.
+**It's open.** `/request/` is in the nav and the sitemap, and every other page points at it, with the email address next to it as the fallback. `/request/thanks/` and `/request/problem/` are in `unlisted` in `src/site.js`: served, but `noindex` and out of the sitemap, since nobody should land on them from a search.
 
 nginx hands `POST /request/submit` to the relay, and that's the only request that leaves the site's container. One setting says where the relay is:
 

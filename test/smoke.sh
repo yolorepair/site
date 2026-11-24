@@ -76,7 +76,7 @@ check "og-image.png is image/png" "image/png" "$(header content-type "$BASE/og-i
 
 # Every page: 200 at the slash form, its own canonical, and a relative 301
 # from the slashless form (never an absolute one, which would leak :8080).
-for page in repairs how-it-works contact; do
+for page in repairs how-it-works request contact; do
   check "GET /$page/ is 200" "200" "$(status "$BASE/$page/")"
   body="$(curl -s "$BASE/$page/")"
   has "/$page/ canonical" "<link rel=\"canonical\" href=\"https://yolorepair.com/$page/\">" "$body"
@@ -121,23 +121,30 @@ for page in "$home" "$repairs" "$how" "$contact"; do
   lacks "no phone number" "tel:" "$page"
 done
 
-# The repair-request pages: served, but not to be found yet. No nav link,
-# noindex, out of the sitemap.
+# The repair-request pages. The form is a listed page, checked with the rest
+# above. Its thanks and problem pages are served but not to be found: noindex
+# and out of the sitemap.
 sitemap="$(curl -s "$BASE/sitemap-0.xml")"
 for page in request request/thanks request/problem; do
   check "GET /$page/ is 200" "200" "$(status "$BASE/$page/")"
   body="$(curl -s "$BASE/$page/")"
-  has "/$page/ is noindex" '<meta name="robots" content="noindex">' "$body"
+  if [ "$page" != request ]; then
+    has "/$page/ is noindex" '<meta name="robots" content="noindex">' "$body"
+    lacks "/$page/ is not in the sitemap" "yolorepair.com/$page/" "$sitemap"
+  fi
   has "/$page/ has the nav" '<nav aria-label="Site">' "$body"
-  lacks "/$page/ is not in the sitemap" "yolorepair.com/$page/" "$sitemap"
   lacks "/$page/ has no script" "<script" "$body"
   lacks "/$page/ has no phone number" "tel:" "$body"
   lacks "/$page/ prints no price" '$' "$body"
   lacks "/$page/ promises no warranty" "arranty" "$body"
 done
 for path in / /repairs/ /how-it-works/ /contact/; do
-  lacks "$path doesn't link to the form yet" 'href="/request/' "$(curl -s "$BASE$path")"
+  page="$(curl -s "$BASE$path")"
+  has "$path links to the form in its copy" '<a href="/request/">' "${page#*</header>}"
+  has "$path keeps the email as the fallback" 'href="mailto:hello@yolorepair.com"' "$page"
 done
+has "the nav links to the form" '<a href="/request/">Request a repair</a>' "$(curl -s "$BASE/" | sed 's/<\/header>.*//')"
+has "the form says where what you type goes" 'class="hint privacy"' "$(curl -s "$BASE/request/")"
 
 # The form. Names and caps are intake's contract (the relay's copy is
 # relay/testdata/request-contract.json); the relay drops anything that fills
