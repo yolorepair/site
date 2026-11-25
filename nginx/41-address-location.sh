@@ -80,9 +80,12 @@ location = /request/address {
     proxy_set_header User-Agent "";
     proxy_hide_header Set-Cookie;
 
+    # Photon reads its index off the NAS, so a lookup it hasn't done lately
+    # can take several seconds. A slow suggestion beats none; address.js
+    # drops a lookup the moment the visitor types past it.
     proxy_connect_timeout 1s;
-    proxy_send_timeout 3s;
-    proxy_read_timeout 3s;
+    proxy_send_timeout 8s;
+    proxy_read_timeout 8s;
 
     # Photon down, not ready, or confused: no suggestions, never an error.
     proxy_intercept_errors on;
