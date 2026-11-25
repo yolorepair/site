@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.3](https://github.com/yolorepair/site/compare/v0.6.2...v0.6.3) (2026-11-25)
+
+
+### Bug Fixes
+
+* **nginx:** wait up to 8s for Photon's address suggestions ([9362739](https://github.com/yolorepair/site/commit/9362739aad16124f819122b1846235649ee85ff5))
+* **nginx:** wait up to 8s for Photon's address suggestions ([#62](https://github.com/yolorepair/site/issues/62)) ([f35fbca](https://github.com/yolorepair/site/commit/f35fbca52ad51f2224e281a227b97cedf3a9627b))
+
 ## [0.6.2](https://github.com/yolorepair/site/compare/v0.6.1...v0.6.2) (2026-11-25)
 
 
