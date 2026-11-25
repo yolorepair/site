@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.2](https://github.com/yolorepair/site/compare/v0.6.1...v0.6.2) (2026-11-25)
+
+
+### Documentation
+
+* **readme:** the request form ships one script ([#59](https://github.com/yolorepair/site/issues/59)) ([6d16047](https://github.com/yolorepair/site/commit/6d160471dd8d91a626ddc57954b81508282c0fd3))
+
 ## [0.6.1](https://github.com/yolorepair/site/compare/v0.6.0...v0.6.1) (2026-11-24)
 
 
