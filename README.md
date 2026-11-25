@@ -2,7 +2,7 @@
 
 The site for **YOLO Electronics Repair** — board-level repair in West Sacramento. Laptops, GPUs, DJ gear, power amps, retro hardware.
 
-It's a static site. [Astro](https://astro.build) builds plain HTML and CSS, nginx serves it, and the whole thing ships as one container image. No JavaScript reaches the browser, and the page loads nothing from anyone else's server — fonts included.
+It's a static site. [Astro](https://astro.build) builds plain HTML and CSS, nginx serves it, and the whole thing ships as one container image. One small script runs on the request form, to help with the address; every other page ships no JavaScript of its own. Nothing loads from anyone else's server — fonts included.
 
 ## Run it
 
